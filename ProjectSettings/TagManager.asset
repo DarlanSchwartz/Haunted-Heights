@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Vaultable
+  - Grabable
+  - JumpOnto
+  - WetSurface
+  - WaterDeep
+  - Inside_Wood
+  - Grass
+  - InsideBuilding
+  - Item
+  - Ladder
+  - BalanceBeam
+  - Outside_Wood
+  - Metal
+  - Dirt
+  - BalanceBeamBetween
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - Player
+  - Vaultables
+  - DontCollideWithPlayer
+  - DontRender
+  - PostProcessing
+  - RainEffect
+  - Item
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Camera_RainEffect
+    uniqueID: 939832737
+    locked: 0
