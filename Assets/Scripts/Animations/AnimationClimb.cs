@@ -13,8 +13,9 @@ public class AnimationClimb : StateMachineBehaviour
         animator.SetBool(AnimationHashUtility.PlayingClimbAnimation, true);
         animator.SetFloat(AnimationHashUtility.Vertical, 0);
         animator.SetFloat(AnimationHashUtility.Horizontal, 0);
-        
-        if(DoneAfter > 0)
+        animator.ResetTrigger(AnimationHashUtility.Climb);
+
+        if (DoneAfter > 0)
         {
             timerDoneAfter = 0;
             timerDoneAfter += Time.deltaTime;
@@ -40,6 +41,6 @@ public class AnimationClimb : StateMachineBehaviour
         {
             animator.SetBool(AnimationHashUtility.PlayingClimbAnimation, false);
         }
-        animator.ResetTrigger(AnimationHashUtility.Climb);
+       
     }
 }

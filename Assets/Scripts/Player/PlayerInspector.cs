@@ -59,7 +59,7 @@ public class PlayerInspector : MonoBehaviour
 
                 if(Input.GetKeyDown(KeyCode.E) && m_fwdHit.transform.CompareTag(LadderTag))
                 {
-                    if(pmove.inLadder)
+                    if(pmove.InLadder)
                     {
                         return;
                     }

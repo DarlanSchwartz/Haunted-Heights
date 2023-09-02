@@ -19,6 +19,11 @@ public class AnimationBehaviorGrab : StateMachineBehaviour
         Complete = false;
     }
 
+    public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        Reset();
+    }
+
     public override void OnStateUpdate(Animator animator, AnimatorStateInfo animatorStateInfo, int layerIndex)
     {
         if (!Complete)

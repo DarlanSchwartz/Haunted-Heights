@@ -51,6 +51,7 @@ public class PlayerLook : MonoBehaviour
         if(ClampVerticalRotation)
         {
             CameraTargetRot.x = Mathf.Clamp(CameraTargetRot.x, MinX, MaxX);
+           
         }
                 
         if(!lookPlayer)
@@ -115,15 +116,13 @@ public class PlayerLook : MonoBehaviour
 
         if (ClampHorizontalRotation)
         {
-            if(!lookPlayer)
+           
+            if (!lookPlayer)
             {
                 CameraTargetRot.y = Mathf.Clamp(CameraTargetRot.y, MinY, MaxY);
             }
-            else
-            {
-                CharacterTargetRot.y = Mathf.Clamp(CharacterTargetRot.y, MinY, MaxY);
-            }
         }
+        
 
         CameraTargetRot.z = 0;
 
@@ -140,6 +139,10 @@ public class PlayerLook : MonoBehaviour
         }
         else
         {
+            if (ClampHorizontalRotation)
+            {
+                return;
+            }
             if (Smooth)
             {
                 CameraTargetRot.y = 0;
@@ -160,6 +163,11 @@ public class PlayerLook : MonoBehaviour
         PlayerCamera.localRotation = Quaternion.Euler(CameraTargetRot);
     }
 
+    public void Reset()
+    {
+        CameraTargetRot = PlayerCharacter.localRotation.eulerAngles;
+        CharacterTargetRot = PlayerCharacter.localRotation.eulerAngles;
+    }
 
 
     public float MouseVertical

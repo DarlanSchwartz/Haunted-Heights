@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Debug Settings
   m_EditorClassIdentifier: 
   DebugCanJump: 0
-  DebugJump: 0
+  DebugJump: 1
   DebugLand: 0
   DebugFalling: 0
   DebugVault: 0
   DebugCrouch: 0
   DebugMove: 0
-  DebugHang: 0
+  DebugHang: 1
   DebugSlide: 0

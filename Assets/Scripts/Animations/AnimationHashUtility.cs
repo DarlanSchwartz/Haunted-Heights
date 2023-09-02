@@ -48,6 +48,7 @@ public static class AnimationHashUtility
     public readonly static int PlayingClimbAnimation = Animator.StringToHash("PlayingClimbAnimation");
     public readonly static int PlayingJumpAnimation = Animator.StringToHash("PlayingJumpAnimation");
     public readonly static int PlayingSlideAnimation = Animator.StringToHash("PlayingSlideAnimation");
+    public readonly static int PlayingHangStartAnimation = Animator.StringToHash("PlayingHangStartAnimation");
 
     public readonly static int LeftFootCurve = Animator.StringToHash("LeftFootCurve");
     public readonly static int RightFootCurve = Animator.StringToHash("RightFootCurve");

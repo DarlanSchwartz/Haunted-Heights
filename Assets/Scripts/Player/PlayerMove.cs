@@ -4,7 +4,8 @@ using UnityEditor;
 using UnityEngine;
 public class PlayerMove : MonoBehaviour
 {
-
+    public KeyCode resetDebugPositionKey = KeyCode.R;
+    [SerializeField] private Transform resetPosition;
     private Vector3 restartPos;
     public Transform PlayerHead { get; private set; } // Is found on awake
 
@@ -15,6 +16,7 @@ public class PlayerMove : MonoBehaviour
     public int defaultCameraFov = 60;
     public int runningCameraFov = 80;
     public float fovFadeSpeed = 5;
+   
     public Transform SlideDirection { get; private set; } // Is created on awake
     public Animator Animator { get; private set; } // Is found on awake
 
@@ -30,7 +32,7 @@ public class PlayerMove : MonoBehaviour
     public KeyCode jumpKey = KeyCode.Space;
     public KeyCode crouchKey = KeyCode.LeftControl;
     public KeyCode slideKey = KeyCode.C;
-    [Space(10)]
+   [Space(10)]
     public SpeedSettings Speed;
     public FallSettings FallSettings;
     public VaultSettings VaultSettings;
@@ -79,6 +81,11 @@ public class PlayerMove : MonoBehaviour
     private GrabableObject m_current_GrabObject;
     private bool m_hangingon_DynamicObject = false;
     private float m_stored_maxX;
+    private bool PlayingHangStartAnimation{ get
+        {
+            return Animator.GetBool(AnimationHashUtility.PlayingHangStartAnimation);
+        }
+    }
     //Sliding
     private Vector3 m_Start_Slide_Direction;
     private float m_currentSlideTime = 0;
@@ -89,7 +96,7 @@ public class PlayerMove : MonoBehaviour
     // Inspecting
     public bool m_inspecting { get; set; }
     // Balance
-    public bool inBalanceMode { get; private set; }
+    public bool InBalanceMode { get; private set; }
     private float motionTime = 0;
     private BalanceBeam currentBalanceBean;
     private Vector3 currentBalanceBeanTarget;
@@ -98,7 +105,7 @@ public class PlayerMove : MonoBehaviour
     private Transform m_currentTriggerStartTransform;
 
     //Ladder
-    public bool inLadder { get; private set; }
+    public bool InLadder { get; private set; }
     private Ladder currentLadder;
     private bool m_goingToLadderStartPos = false;
     private bool m_movingInLadder = false;
@@ -156,20 +163,26 @@ public class PlayerMove : MonoBehaviour
             return;
         }
 
-        if(inBalanceMode)
+        if (Input.GetKeyUp(resetDebugPositionKey) && resetPosition != null)
+        {
+            ResetPlayer(resetPosition.position,resetPosition.rotation);
+            return;
+        }
+
+        if (InBalanceMode)
         {
             HandleBalance();
             return;
         }
 
-        if (inLadder)
+        if (InLadder)
         {
             HandleLadderMovement();
             return;
         }
 
 
-        if (!Vaulting && !Hanging && !SlidingUnder && !JumpingOnto)
+        if (!Vaulting && !Hanging && !SlidingUnder && !JumpingOnto && !GoingToHangTarget)
         {
             MoveSimple();
             HandleVault();
@@ -209,10 +222,16 @@ public class PlayerMove : MonoBehaviour
         HandleSlideUnderMovement();
     }
 
+    private void ResetPlayer(Vector3 position,Quaternion rotation)
+    {
+        MouseLook.Reset();
+        transform.SetPositionAndRotation(position, rotation);
+    }
+
     public void EnterLadder(Ladder ladder)
     {
         currentLadder = ladder;
-        inLadder = true;
+        InLadder = true;
         MouseLook.ClampHorizontalRotation = true;
         MouseLook.MaxY = 83;
         MouseLook.MinY = -83;
@@ -246,20 +265,18 @@ public class PlayerMove : MonoBehaviour
 
     private IEnumerator GoToLadderPoint(Transform TargetReference)
     {
-        bool conditionMet = false;
+        bool conditionMet;
         do
         {
-            transform.position = Vector3.Lerp(transform.position, TargetReference.position, 5 * Time.deltaTime);
-            transform.rotation = Quaternion.Lerp(transform.rotation, TargetReference.rotation, 10 * Time.deltaTime);
+            transform.SetPositionAndRotation(Vector3.Lerp(transform.position, TargetReference.position,10 * Time.deltaTime), Quaternion.Lerp(transform.rotation, TargetReference.rotation, 10 * Time.deltaTime));
             m_goingToLadderStartPos = true;
-            conditionMet = Vector3.Distance(transform.position, TargetReference.position) <= 0.1f && transform.rotation.eulerAngles == TargetReference.rotation.eulerAngles;
-
+            float difference = Quaternion.Angle(transform.rotation, TargetReference.rotation);
+            conditionMet = Vector3.Distance(transform.position, TargetReference.position) <= 0.9f && difference < 0.2f;
             yield return null;
         } while (!conditionMet);
 
         m_goingToLadderStartPos = false;
-        transform.position = TargetReference.position;
-        transform.rotation = TargetReference.rotation;
+        transform.SetPositionAndRotation(TargetReference.position, TargetReference.rotation);
 
         yield break;
     }
@@ -276,8 +293,7 @@ public class PlayerMove : MonoBehaviour
         currentLadder.Climb();
         do
         {
-            transform.position = currentLadder.playerReferencePosition.position;
-            transform.rotation = currentLadder.playerReferencePosition.rotation;
+            transform.SetPositionAndRotation(currentLadder.playerReferencePosition.position, currentLadder.playerReferencePosition.rotation);
             delta += 0.5f * Time.deltaTime;
 
             if(delta >= 0.5f)
@@ -424,7 +440,7 @@ public class PlayerMove : MonoBehaviour
         currentLadder = null;
         MouseLook.ClampHorizontalRotation = false;
         FeetIK.forceFeetIk = false;
-        inLadder = false;
+        InLadder = false;
         FeetIK.enableFeetIk = true;
         Animator.SetBool(AnimationHashUtility.ClimbLadderIdle, false);
         MouseLook.MaxX = defaultCameraMaxX;
@@ -497,8 +513,8 @@ public class PlayerMove : MonoBehaviour
     {
         m_currentTriggerStartTransform = startTrigger;
         currentBalanceBeanTarget = target;
-        inBalanceMode = true;
-        Animator.SetBool(AnimationHashUtility.Balance, inBalanceMode);
+        InBalanceMode = true;
+        Animator.SetBool(AnimationHashUtility.Balance, InBalanceMode);
         MouseLook.ClampHorizontalRotation = true;
         MouseLook.MaxY = 70;
         MouseLook.MinY = -70;
@@ -557,9 +573,9 @@ public class PlayerMove : MonoBehaviour
     }
     public void ExitBalanceMode()
     {
-        inBalanceMode = false;
+        InBalanceMode = false;
         Animator.SetFloat(AnimationHashUtility.MotionTimeDelta,1);
-        Animator.SetBool(AnimationHashUtility.Balance, inBalanceMode);
+        Animator.SetBool(AnimationHashUtility.Balance, InBalanceMode);
         MouseLook.ClampHorizontalRotation = false;
         inBetweenBalanceMode = false;
         currentBalanceBean = null;
@@ -651,6 +667,11 @@ public class PlayerMove : MonoBehaviour
         Animator.ResetTrigger(AnimationHashUtility.Land);
         m_gravityForceV = Vector3.zero;
         StartCoroutine(JumpEventSimple());
+
+        if (DebugSettings.DebugJump)
+        {
+            Debug.Log("Jump Started!");
+        }
     }
 
     private IEnumerator JumpEventSimple()
@@ -855,15 +876,20 @@ public class PlayerMove : MonoBehaviour
         }
 
         StartCoroutine(Hang(behaviourGrab));
+    }
+
+    private IEnumerator Hang(AnimationBehaviorGrab grabAnim)
+    {
+        if (GoingToHangTarget)
+        {
+            yield break;
+        }
 
         if (DebugSettings.DebugHang)
         {
             Debug.Log("Started Hanging.");
         }
-    }
 
-    private IEnumerator Hang(AnimationBehaviorGrab grabAnim)
-    {
         bool freeHang = grabAnim.animationID == 0 ? false : true;
         float maxX = freeHang ? ClimbSettings.MouseLookMaxXFreeHang : ClimbSettings.MouseLookMaxXGrab;
         GoingToHangTarget = true;
@@ -886,8 +912,7 @@ public class PlayerMove : MonoBehaviour
         // Go to climb point
         do
         {
-            transform.position = Vector3.MoveTowards(transform.position, m_target_GrabPos, Speed.HangSpeed * Time.deltaTime);
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(m_target_GrabRot), Speed.HangSpeed * 5 * Time.deltaTime);
+            transform.SetPositionAndRotation(Vector3.MoveTowards(transform.position, m_target_GrabPos, Speed.HangSpeed * Time.deltaTime), Quaternion.Lerp(transform.rotation, Quaternion.Euler(m_target_GrabRot), Speed.HangSpeed * 5 * Time.deltaTime));
             HandIK.LeftWeight = Mathf.LerpUnclamped(HandIK.LeftWeight, 1, 5 * Time.deltaTime);
             HandIK.RightWeight = Mathf.LerpUnclamped(HandIK.RightWeight, 1, 5 * Time.deltaTime);
 
@@ -928,13 +953,10 @@ public class PlayerMove : MonoBehaviour
                 CancelHang();
                 yield break;
             }
-            else if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W))
+            else if (m_target_EndClimbPos != Vector3.zero && (Input.GetKeyDown(jumpKey) || Input.GetKeyDown(KeyCode.W)) && !GoingToHangTarget && !PlayingHangStartAnimation)
             {
-                if (m_target_EndClimbPos != Vector3.zero)
-                {
-                    StartClimb(freeHang);
-                    yield break;
-                }
+                StartClimb(freeHang);
+                yield break;
             }
 
             yield return null;
@@ -977,6 +999,10 @@ public class PlayerMove : MonoBehaviour
 
         HandIK.SetElbows(null, null, false);
         Animator.SetTrigger(AnimationHashUtility.Climb);
+        Animator.SetBool(AnimationHashUtility.PlayingClimbAnimation, true);
+        Animator.SetBool(AnimationHashUtility.PlayerFalling, false);
+        Animator.SetBool(AnimationHashUtility.OnGround, true);
+
         Animator.SetBool(AnimationHashUtility.Hanging, false);
         HandIK.ResetBodyLook();
         Climbing = true;
@@ -1020,6 +1046,11 @@ public class PlayerMove : MonoBehaviour
 
     private void EndClimb()
     {
+        if (GoingToHangTarget)
+        {
+            return;
+        }
+
         if (m_hangingon_DynamicObject)
         {
             transform.SetParent(null);
@@ -1050,6 +1081,11 @@ public class PlayerMove : MonoBehaviour
         HandIK.DisableHandIK();
         m_current_GrabObject = null;
         LastHangObject = null;
+
+        if (DebugSettings.DebugHang)
+        {
+            Debug.Log("End Climb");
+        }
     }
 
     private void CancelHang()
@@ -1074,6 +1110,10 @@ public class PlayerMove : MonoBehaviour
         Animator.SetTrigger(AnimationHashUtility.CancelHang);
         m_current_GrabObject = null;
         StartFalling();
+        if (DebugSettings.DebugHang)
+        {
+            Debug.Log("Cancel Hang");
+        }
     }
 
     private void PlaceHandOnHangTarget()
@@ -1598,6 +1638,11 @@ public class PlayerMove : MonoBehaviour
 
     public void StartFalling()
     {
+        if(Animator.GetBool(AnimationHashUtility.PlayingClimbAnimation) || GoingToHangTarget)
+        {
+            return;
+        }
+        
         TimeWaitingToFall = 0;
         Falling = true;
         Animator.SetBool(AnimationHashUtility.FarFromGround, FarFromGround);
@@ -1755,13 +1800,9 @@ public class PlayerMove : MonoBehaviour
 
     private void HandleSlideUnder()
     {
-        if (Input.GetKeyDown(slideKey) || Input.GetKey(slideKey))
+        if ((Input.GetKeyDown(slideKey) || Input.GetKey(slideKey)) && CanSlide)
         {
-            if (CanSlide)
-            {
-                StartSlide();
-                return;
-            }
+            StartSlide();
         }
     }
     float startY;
@@ -1772,9 +1813,12 @@ public class PlayerMove : MonoBehaviour
         Controller.stepOffset = 0;
         Controller.center = SlideSettings.ControllerCenter;
         Controller.radius = SlideSettings.ControllerRadius;
-        //MouseLook.ClampHorizontalRotation = true;
-        //MouseLook.MaxY = 35;
-        //MouseLook.MinY = -20;
+
+        MouseLook.MaxY = 35;
+        MouseLook.MinY = -35;
+        MouseLook.ClampHorizontalRotation = true;
+        //Debug.Break();
+        
         m_stored_maxX = MouseLook.MaxX;
 
 
@@ -1789,27 +1833,30 @@ public class PlayerMove : MonoBehaviour
 
     private void HandleSlideUnderMovement()
     {
-        if (SlidingUnder)
+        if (!SlidingUnder)
         {
-            Controller.SimpleMove(m_Start_Slide_Direction * GetTargetSpeed);
+            return;
+        }
 
-            if (OnSlope)
-            {
-                Controller.Move(Vector3.down * SlopeSettings.Force * Time.deltaTime);
-            }
+        Controller.SimpleMove(m_Start_Slide_Direction * GetTargetSpeed);
 
-            m_currentSlideTime += Time.deltaTime;
+        if (OnSlope)
+        {
+            Controller.Move(SlopeSettings.Force * Time.deltaTime * Vector3.down);
+        }
 
-            if (m_currentSlideTime >= SlideSettings.AnimationLenght || !OnGround)
-            {
-                m_currentSlideTime = 0;
-                EndSlide();
-            }
+        m_currentSlideTime += Time.deltaTime;
+
+        if (m_currentSlideTime >= SlideSettings.AnimationLenght || !OnGround)
+        {
+            EndSlide();
         }
     }
 
     public void EndSlide()
     {
+        MouseLook.ClampHorizontalRotation = false;
+        m_currentSlideTime = 0;
         if (OnGround)
         {
             if (Input.GetKeyDown(crouchKey) || Input.GetKey(crouchKey) || Physics.Raycast(ColliderTop, Vector3.up, out _, 1.5f) || Physics.SphereCast(ColliderTop, Controller.radius, Vector3.up, out _, 1.5f))
@@ -2510,7 +2557,7 @@ public class PlayerMove : MonoBehaviour
     {
         get
         {
-            if(inBalanceMode)
+            if(InBalanceMode)
             {
                 m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, Speed.BalanceSpeed, Time.deltaTime * Speed.Acceleration);
                 return m_TargetSpeed;
@@ -2720,7 +2767,7 @@ public class PlayerMove : MonoBehaviour
                 }
             }
         }
-         if(inLadder)
+         if(InLadder)
         {
             Gizmos.color = Color.magenta;
             Gizmos.DrawWireSphere(transform.position + ((-transform.right * 0.8f) + transform.forward * 2), 0.2f);
