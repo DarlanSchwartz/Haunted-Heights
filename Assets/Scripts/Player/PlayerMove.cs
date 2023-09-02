@@ -931,7 +931,7 @@ public class PlayerMove : MonoBehaviour
             }
 
             yield return null;
-        } while (!grabAnim.Complete || Vector3.Distance(transform.position, m_target_GrabPos) > 0.1f || MouseLook.MaxX < maxX);
+        } while (!grabAnim.Complete && Vector3.Distance(transform.position, m_target_GrabPos) > 0.1f && MouseLook.MaxX < maxX);
 
         transform.position = m_current_GrabObject.startTarget.position;
         GoingToHangTarget = false;
@@ -1002,6 +1002,8 @@ public class PlayerMove : MonoBehaviour
         Animator.SetBool(AnimationHashUtility.PlayingClimbAnimation, true);
         Animator.SetBool(AnimationHashUtility.PlayerFalling, false);
         Animator.SetBool(AnimationHashUtility.OnGround, true);
+        Animator.SetFloat(AnimationHashUtility.Vertical, 0);
+        Animator.SetFloat(AnimationHashUtility.Horizontal, 0);
 
         Animator.SetBool(AnimationHashUtility.Hanging, false);
         HandIK.ResetBodyLook();

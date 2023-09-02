@@ -33,7 +33,7 @@ public class AnimationBehaviorGrab : StateMachineBehaviour
 
             AnimationDelta = _timeDelta / AnimationLenght;
 
-            if (_timeDelta == AnimationLenght)
+            if (_timeDelta >= AnimationLenght)
             {
                 Complete = true;
             }

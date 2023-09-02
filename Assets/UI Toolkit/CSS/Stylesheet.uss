@@ -1,0 +1,55 @@
+.button {
+    width: 100%;
+    max-width: 280px;
+    display: flex;
+    opacity: 1;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    transition-property: all;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+    transition-delay: 0s;
+    flex-shrink: 1;
+    max-height: 60px;
+    -unity-font-definition: url('project://database/Assets/UI%20Toolkit/Fonts/Bad%20Signal%20SDF.asset?fileID=11400000&guid=578118cea39cd68408777af834f238a6&type=2#Bad Signal SDF');
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-scale-mode: stretch-to-fill;
+    border-left-color: rgba(0, 0, 0, 0);
+    border-right-color: rgba(0, 0, 0, 0);
+    border-top-color: rgba(0, 0, 0, 0);
+    border-bottom-color: rgba(0, 0, 0, 0);
+    font-size: 35px;
+    padding-top: 10px;
+    margin-top: 10px;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+    background-image: url('project://database/Assets/UI%20Toolkit/Sprites/Button-Background.png?fileID=2800000&guid=a84c017c93272c14d8af27fa7883299b&type=3#Button-Background');
+    -unity-background-image-tint-color: rgba(200, 69, 69, 0);
+    height: auto;
+    min-height: 65px;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    -unity-slice-left: 0;
+    -unity-slice-top: 0;
+    letter-spacing: 18px;
+    cursor: url('project://database/Assets/UI%20Toolkit/Sprites/Cursor.png?fileID=2800000&guid=67b45227a154c89419b04cf79a133a19&type=3#Cursor');
+}
+
+.button:hover {
+    color: rgb(255, 244, 244);
+    font-size: 44px;
+    -unity-background-image-tint-color: rgb(200, 69, 69);
+}
+
+.loading-text {
+    -unity-font-definition: url('project://database/Assets/UI%20Toolkit/Fonts/Bad%20Signal%20SDF.asset?fileID=11400000&guid=578118cea39cd68408777af834f238a6&type=2#Bad Signal SDF');
+    font-size: 50px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: normal;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    letter-spacing: 3px;
+}

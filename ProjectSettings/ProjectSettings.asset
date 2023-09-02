@@ -14,7 +14,7 @@ PlayerSettings:
   accelerometerFrequency: 60
   companyName: Schwartz
   productName: Controler Test
-  defaultCursor: {fileID: 0}
+  defaultCursor: {fileID: 2800000, guid: d2680a8df08881044b59545f88c51047, type: 3}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
   m_ShowUnitySplashScreen: 1

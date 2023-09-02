@@ -10,9 +10,6 @@ public class AnimationClimb : StateMachineBehaviour
     //OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        animator.SetBool(AnimationHashUtility.PlayingClimbAnimation, true);
-        animator.SetFloat(AnimationHashUtility.Vertical, 0);
-        animator.SetFloat(AnimationHashUtility.Horizontal, 0);
         animator.ResetTrigger(AnimationHashUtility.Climb);
 
         if (DoneAfter > 0)
@@ -37,10 +34,6 @@ public class AnimationClimb : StateMachineBehaviour
     //OnStateExit is called when a transition ends and the state machine finishes evaluating this state
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        if(DoneAfter == 0)
-        {
-            animator.SetBool(AnimationHashUtility.PlayingClimbAnimation, false);
-        }
-       
+        animator.SetBool(AnimationHashUtility.PlayingClimbAnimation, false);
     }
 }
