@@ -14,15 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Layers:
     serializedVersion: 2
-    m_Bits: 512
+    m_Bits: 66048
   VaultableTags: Vaultable,Etc
   MaxAngle: 130
   MinVaultDistRunning: 5.5
   MinVaultDistWalking: 3.7
   MinVaultDistIdle: 2.5
-  MinVaultHeight: 1
+  MinVaultHeight: 1.57
+  SpeedMaxDistanceMultiplier: 3
   ControllerHeight: 1.42
   ControllerCenter: {x: 0, y: 0, z: 0}
+  JumpOntoMaxDistance: 3
   VaultCameraAnimRot:
     serializedVersion: 2
     m_Curve:

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GroundLayers:
     serializedVersion: 2
-    m_Bits: 567
+    m_Bits: 66103
   MinFallDistance: 1.1
   MinFallTime: 0.1
   GravityForce: 40

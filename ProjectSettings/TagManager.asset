@@ -20,6 +20,10 @@ TagManager:
   - Dirt
   - BalanceBeamBetween
   - Wall
+  - Tile
+  - WaterShallow
+  - Metal_Old
+  - Concrete
   layers:
   - Default
   - TransparentFX
@@ -37,8 +41,8 @@ TagManager:
   - RainEffect
   - Item
   - Boundarie
-  - 
-  - 
+  - Jumpable
+  - NotGround
   - 
   - 
   - 

@@ -9,8 +9,8 @@ PhysicMaterial:
   m_Name: Bouncy
   dynamicFriction: 1.04
   staticFriction: 0.3
-  bounciness: 1
-  frictionCombine: 0
+  bounciness: 0.46
+  frictionCombine: 2
   bounceCombine: 3
 --- !u!1002 &13400001
 EditorExtensionImpl:

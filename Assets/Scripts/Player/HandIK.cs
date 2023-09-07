@@ -58,7 +58,7 @@ public class HandIK : MonoBehaviour
             m_manualWeights = value; 
         }
     }
-    public bool lookElbows { get; private set; }
+    public bool LookElbows { get; private set; }
     public bool BodyLook { get; private set; }
 
     public Vector3 BodyLookAtPosition { get; private set;}
@@ -326,7 +326,7 @@ public class HandIK : MonoBehaviour
             Animator.SetLookAtWeight(1, LookAtWeight, 0, 0);
         }
 
-        if(lookElbows)
+        if(LookElbows)
         {
             Animator.SetIKHintPosition(AvatarIKHint.LeftElbow, leftElbowPosition.position);
             Animator.SetIKHintPosition(AvatarIKHint.RightElbow, rightElbowPosition.position);
@@ -341,14 +341,14 @@ public class HandIK : MonoBehaviour
     {
         rightElbowPosition = right;
         leftElbowPosition = left;
-        lookElbows = value;
+        LookElbows = value;
     }
 
     public void ResetElbows()
     {
         Animator.SetIKHintPositionWeight(AvatarIKHint.LeftElbow, 0);
         Animator.SetIKHintPositionWeight(AvatarIKHint.RightElbow, 0);
-        lookElbows = false;
+        LookElbows = false;
     }
 
     public void SetWeightSpeed(float value)

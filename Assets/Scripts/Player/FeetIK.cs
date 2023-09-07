@@ -2,25 +2,46 @@ using UnityEngine;
 
 public class FeetIK : MonoBehaviour
 {
+    public bool DebugRays = true;
+    public bool IsEnabled = true;
     public Animator Animator { get; set;}
+    public FallSettings FallSettings;
+
+    [Range(0, 2)][SerializeField] private float heightFromGroundRaycast = 1.14f;
+    [Range(0, 2)][SerializeField] private float raycastDownDistance = 1.5f;
+    [SerializeField] private float pelvisOffset = 0f;
+    [Range(0, 1)][SerializeField] private float pelvisUpAndDownSpeed = 0.28f;
+    [Range(0, 1)][SerializeField] private float feetToIkPositionSpeed = 0.5f;
+
+    public string leftFootAnimVariableName = "LeftFootCurve";
+    public string rightFootAnimVariableName = "RightFootCurve";
+    [Range(-4,5)]
+    public float littlePelvisOffset;
+    public bool forceFeetIk;
 
     private Vector3 rightFootPosition;
     private Vector3 leftFootPosition;
+
+    [HideInInspector]
     public Vector3 leftFootIkPosition;
+    [HideInInspector]
     public Vector3 rightFootIkPosition;
+    [HideInInspector]
+    public Quaternion leftFootIkRotation;
+    [HideInInspector]
+    public Quaternion rightFootIkRotation;
 
     public Vector3 LeftIKHint { get; private set; }
     public Vector3 RightIKHint { get; private set; }
 
-    public float lOffsetPosition;
-    public float rOffsetPosition;
-    public Quaternion leftFootIkRotation;
-    public Quaternion rightFootIkRotation;
+    private float lOffsetPosition;
+    private float rOffsetPosition;
+   
     private float lastPelvisPositionY;
-    public float littlePelvisOffset;
+   
     private float lastRightFootPositionY;
     private float lastLeftFootPositionY;
-    public bool forceFeetIk;
+    
     private bool m_useHints;
 
     public bool UseHints
@@ -35,22 +56,12 @@ public class FeetIK : MonoBehaviour
         }
     }
 
-    public bool enableFeetIk = true;
-    [Range(0, 2)] [SerializeField] private float heightFromGroundRaycast = 1.14f;
-    [Range(0, 2)] [SerializeField] private float raycastDownDistance = 1.5f;
-    public LayerMask environmentLayer;
-    [SerializeField] private float pelvisOffset = 0f;
-    [Range(0, 1)] [SerializeField] private float pelvisUpAndDownSpeed = 0.28f;
-    [Range(0, 1)] [SerializeField] private float feetToIkPositionSpeed = 0.5f;
-
-    public string leftFootAnimVariableName = "LeftFootCurve";
-    public string rightFootAnimVariableName = "RightFootCurve";
-
-    public bool showSolverDebug = true;
+   
+   
 
     private void FixedUpdate()
     {
-        if(enableFeetIk)
+        if(IsEnabled)
         {
             AdjustFeetTarget(ref rightFootPosition, HumanBodyBones.RightFoot);
             AdjustFeetTarget(ref leftFootPosition, HumanBodyBones.LeftFoot);
@@ -85,16 +96,14 @@ public class FeetIK : MonoBehaviour
             return;
         }
 
-        if(enableFeetIk)
+        if(IsEnabled)
         {
-            //right foot ik position and rotation -- utilise the pro features in here
             Animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, Animator.GetFloat(rightFootAnimVariableName));
 
             Animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, Animator.GetFloat(rightFootAnimVariableName));
 
             MoveFeetToIkPoint(AvatarIKGoal.RightFoot, rightFootIkPosition, rightFootIkRotation, ref lastRightFootPositionY);
 
-            //left foot ik position and rotation -- utilise the pro features in here
             Animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, Animator.GetFloat(leftFootAnimVariableName));
 
             Animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, Animator.GetFloat(leftFootAnimVariableName));
@@ -137,7 +146,7 @@ public class FeetIK : MonoBehaviour
             return;
         }
 
-         lOffsetPosition = leftFootIkPosition.y - transform.position.y;
+        lOffsetPosition = leftFootIkPosition.y - transform.position.y;
         rOffsetPosition = rightFootIkPosition.y - transform.position.y;
 
         float totalOffset = (lOffsetPosition < rOffsetPosition) ? lOffsetPosition : rOffsetPosition;
@@ -166,10 +175,7 @@ public class FeetIK : MonoBehaviour
 
     private void FeetPositionSolver(Vector3 fromSkyPosition, ref Vector3 feetIkPositions, ref Quaternion feetIkRotations)
     {
-        //raycast handling section 
-        RaycastHit feetOutHit;
-
-        if (Physics.Raycast(fromSkyPosition, Vector3.down, out feetOutHit, raycastDownDistance + heightFromGroundRaycast, environmentLayer))
+        if (Physics.Raycast(fromSkyPosition, Vector3.down, out RaycastHit feetOutHit, raycastDownDistance + heightFromGroundRaycast, FallSettings.GroundLayers))
         {
             //finding our feet ik positions from the sky position
             feetIkPositions = fromSkyPosition;
@@ -177,7 +183,7 @@ public class FeetIK : MonoBehaviour
             feetIkRotations = Quaternion.FromToRotation(Vector3.up, feetOutHit.normal) * transform.rotation;
 
 
-            if (showSolverDebug)
+            if (DebugRays)
             {
                 if (feetOutHit.point == Vector3.zero)
                 {
@@ -203,7 +209,7 @@ public class FeetIK : MonoBehaviour
 
     public void SetFeetIkEnabled(int enable)
     {
-        enableFeetIk = enable == 1 ? true : false;
+        IsEnabled = enable == 1;
     }
 
     #endregion
@@ -215,5 +221,4 @@ public class FeetIK : MonoBehaviour
         RightIKHint = right;
         UseHints = enable;
     }
-   
 }

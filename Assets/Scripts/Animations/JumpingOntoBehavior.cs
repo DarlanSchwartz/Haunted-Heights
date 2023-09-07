@@ -14,14 +14,8 @@ public class JumpingOntoBehavior : StateMachineBehaviour
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        
-    }
-
-    public void Reset()
-    {
-        AnimationDelta = 0;
-        _timeDelta = 0;
-        Complete = false;
+        animator.SetBool(AnimationHashUtility.JumpingOnto, true);
+        animator.ResetTrigger(AnimationHashUtility.Land);
     }
 
     public override void OnStateUpdate(Animator animator, AnimatorStateInfo animatorStateInfo, int layerIndex)
@@ -43,6 +37,11 @@ public class JumpingOntoBehavior : StateMachineBehaviour
     //onstateexit is called when a transition ends and the state machine finishes evaluating this state
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateinfo, int layerindex)
     {
+       
+        AnimationDelta = 0;
+        _timeDelta = 0;
+        Complete = false;
+        animator.SetBool(AnimationHashUtility.JumpingOnto, false);
         animator.ResetTrigger("JumpOnto");
     }
 }

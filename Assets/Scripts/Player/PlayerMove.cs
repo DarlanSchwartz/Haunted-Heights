@@ -24,7 +24,6 @@ public class PlayerMove : MonoBehaviour
 
     public HandIK HandIK { get; private set; } // Is found on awake
     public FeetIK FeetIK { get; private set; } // Is found on awake
-    public FeetSounds FeetSounds { get; private set; } // Is found on awake
     public CharacterController Controller { get; private set; } // Is found on awake
     [Space(10)]
     [Header("Keys")] //--------------------------------------------------KEYS----------------------------------------------------------------------
@@ -66,11 +65,14 @@ public class PlayerMove : MonoBehaviour
     private float m_chestYPosition = 1;
     private Vector3 m_targetFinalVault = Vector3.zero;
     private RaycastHit m_hitForwardVault;
+    private RaycastHit m_hitForwardJumpUp;
     private RaycastHit m_hitFowardVaultUp;
     private RaycastHit m_hitDownVault;
+    private RaycastHit m_hitDownJumpUp;
     private RaycastHit m_hitFinalVaultTarget;
     private float m_currentVaultAngle;
     private Vector3 m_hasGroundForVaultRayStart;
+    private Vector3 m_hasGroundForJumpUpEnd;
     private VaultableObject m_lastVaultableObj;
     // Grabbing
     public RaycastHit m_fwdHit;
@@ -120,31 +122,26 @@ public class PlayerMove : MonoBehaviour
         Controller = GetComponent<CharacterController>();
         Animator = GetComponent<Animator>();
         HandIK = GetComponent<HandIK>();
-        FeetSounds = GetComponent<FeetSounds>();
         FeetIK = GetComponent<FeetIK>();
         PlayerCamera = MouseLook.transform;
 
         HandIK.Animator = Animator;
         FeetIK.Animator = Animator;
-        FeetSounds.Animator = Animator;
 
         GameObject tempSlideDir = new GameObject("Slide Direction Object");
         tempSlideDir.transform.SetParent(transform);
         SlideDirection = tempSlideDir.transform;
 
-        // Find a active player on the childs and get its animator controller and avatar and head
+        // Find a active player on the childs and get its animator controller , avatar and head
         for (int i = 0; i < transform.childCount; i++)
         {
-            if (transform.GetChild(i).gameObject.activeSelf)
+            if (transform.GetChild(i).gameObject.activeSelf && transform.GetChild(i).GetComponent<Animator>())
             {
-                if (transform.GetChild(i).GetComponent<Animator>())
-                {
-                    Animator.avatar = transform.GetChild(i).GetComponent<Animator>().avatar;
-                    Animator.runtimeAnimatorController = transform.GetChild(i).GetComponent<Animator>().runtimeAnimatorController;
-                    Destroy(transform.GetChild(i).GetComponent<Animator>());
-                    PlayerHead = transform.GetChild(i).GetComponentInChildren<Head>().transform;
-                    break;
-                }
+                Animator.avatar = transform.GetChild(i).GetComponent<Animator>().avatar;
+                Animator.runtimeAnimatorController = transform.GetChild(i).GetComponent<Animator>().runtimeAnimatorController;
+                Destroy(transform.GetChild(i).GetComponent<Animator>());
+                PlayerHead = transform.GetChild(i).GetComponentInChildren<Head>().transform;
+                break;
             }
         }
 
@@ -155,6 +152,7 @@ public class PlayerMove : MonoBehaviour
 
         CameraComponent = MouseLook != null ? MouseLook.transform.GetComponent<Camera>() : null;
     }
+
 
     private void Update()
     {
@@ -185,24 +183,10 @@ public class PlayerMove : MonoBehaviour
         if (!Vaulting && !Hanging && !SlidingUnder && !JumpingOnto && !GoingToHangTarget)
         {
             MoveSimple();
-            HandleVault();
+            HandleVaultRefactored();
             HandleJumpingOnto();
-
-
-            if (Vaulting || JumpingOnto)
-            {
-                return;
-            }
-
             HandleCrouch();
-
             HandleClimb();
-
-            if (Hanging)
-            {
-                return;
-            }
-
             HandleSlideUnder();
 
             CheckFalling();
@@ -226,6 +210,7 @@ public class PlayerMove : MonoBehaviour
     {
         MouseLook.Reset();
         transform.SetPositionAndRotation(position, rotation);
+
     }
 
     public void EnterLadder(Ladder ladder)
@@ -246,7 +231,7 @@ public class PlayerMove : MonoBehaviour
         HandIK.SetTargetRotations(currentLadder.LeftHandIK.rotation, currentLadder.RightHandIK.rotation);
         HandIK.StartFollowingTargets(true, true);
 
-        FeetIK.enableFeetIk = false;
+        FeetIK.IsEnabled = false;
         FeetIK.forceFeetIk = true;
 
         FeetIK.SetIKHints(true, transform.position + ((-transform.right * 0.8f) + transform.forward * 2), transform.position + ((transform.right * 0.8f) + transform.forward * 2));
@@ -335,12 +320,7 @@ public class PlayerMove : MonoBehaviour
             UpdateIKPositionsInLadder(1);
         }
 
-        if (m_goingToLadderStartPos)
-        {
-            return;
-        }
-
-        if(ladderClimbingEnd)
+        if (m_goingToLadderStartPos || ladderClimbingEnd) 
         {
             return;
         }
@@ -360,15 +340,15 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    private void GoToLadderSegment(int id)
+    private void GoToLadderSegment(int thisLadderSegmentIndex)
     {
-        if (id < 0)
+        if (thisLadderSegmentIndex < 0)
         {
             Exitladder(true);
             return;
         }
         
-        if(id >= currentLadder.points.Count)
+        if(thisLadderSegmentIndex >= currentLadder.points.Count)
         {
             Exitladder(false);
             return;
@@ -379,9 +359,9 @@ public class PlayerMove : MonoBehaviour
             return;
         }
 
-        currentLadderSegment = id;
-        currentLadder.SetTargetDelta(currentLadder.points[id].deltaTarget);
-        StartCoroutine(MoveToLadderSegment(currentLadder.points[id].transform));
+        currentLadderSegment = thisLadderSegmentIndex;
+        currentLadder.SetTargetDelta(currentLadder.points[thisLadderSegmentIndex].deltaTarget);
+        StartCoroutine(MoveToLadderSegment(currentLadder.points[thisLadderSegmentIndex].transform));
     }
 
     private void UpdateIKPositionsInLadder(float weights)
@@ -441,7 +421,7 @@ public class PlayerMove : MonoBehaviour
         MouseLook.ClampHorizontalRotation = false;
         FeetIK.forceFeetIk = false;
         InLadder = false;
-        FeetIK.enableFeetIk = true;
+        FeetIK.IsEnabled = true;
         Animator.SetBool(AnimationHashUtility.ClimbLadderIdle, false);
         MouseLook.MaxX = defaultCameraMaxX;
         Controller.detectCollisions = true;
@@ -518,14 +498,7 @@ public class PlayerMove : MonoBehaviour
         MouseLook.ClampHorizontalRotation = true;
         MouseLook.MaxY = 70;
         MouseLook.MinY = -70;
-        if(Animator.GetFloat(AnimationHashUtility.LeftFootCurve) >= 0.4f)
-        {
-            motionTime = 0.5f;
-        }
-        else
-        {
-            motionTime = 0f;
-        }
+        motionTime = Animator.GetFloat(AnimationHashUtility.LeftFootCurve) >= 0.4f ? 0.5f: 0;
         Animator.SetBool(AnimationHashUtility.Idle,false);
         Animator.SetTrigger(AnimationHashUtility.StartBalance);
         Animator.SetFloat(AnimationHashUtility.Vertical, 0.1f);
@@ -536,8 +509,7 @@ public class PlayerMove : MonoBehaviour
     {
         do
         {
-            transform.position = Vector3.Slerp(transform.position, startPos.position, 50 * Time.deltaTime);
-            transform.rotation = Quaternion.Slerp(transform.rotation, startPos.rotation, 10 * Time.deltaTime);
+            transform.SetPositionAndRotation(Vector3.Slerp(transform.position, startPos.position, 50 * Time.deltaTime), Quaternion.Slerp(transform.rotation, startPos.rotation, 10 * Time.deltaTime));
             m_goinToBalanceStartPos = true;
             yield return null;
         } while (Vector3.Distance(transform.position, startPos.position) > 0.01f && transform.rotation != startPos.rotation) ;
@@ -589,7 +561,7 @@ public class PlayerMove : MonoBehaviour
 
     private void MoveSimple()
     {
-        if (Climbing)
+        if (Climbing || HardLanding)
         {
             return;
         }
@@ -597,11 +569,6 @@ public class PlayerMove : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.R))
         {
             transform.position = restartPos;
-            return;
-        }
-
-        if (HardLanding)
-        {
             return;
         }
 
@@ -615,12 +582,12 @@ public class PlayerMove : MonoBehaviour
 
             if ((VerticalInput != 0 || HorizontalInput != 0) && OnSlope)
             {
-                Controller.Move(Vector3.down * SlopeSettings.Force * Time.deltaTime);
+                Controller.Move(SlopeSettings.Force * Time.deltaTime * Vector3.down);
             }
 
             if (Falling && !Jumping)
             {
-                m_gravityForceV += Vector3.down * FallSettings.GravityForce * Time.deltaTime;
+                m_gravityForceV += FallSettings.GravityForce * Time.deltaTime * Vector3.down;
                 Controller.Move(m_gravityForceV * Time.deltaTime);
             }
         }
@@ -629,7 +596,7 @@ public class PlayerMove : MonoBehaviour
     private void MoveSlide()
     {
         Controller.SimpleMove((Vector3.ClampMagnitude(ForwardMovement + RightMovement, 0.3f) * GetTargetSpeed) + (SlopeDirection * Speed.SlideSpeed) * Time.deltaTime);
-        Controller.Move(Vector3.down * SlopeSettings.SlidingForce * Time.deltaTime);
+        Controller.Move(SlopeSettings.SlidingForce * Time.deltaTime * Vector3.down);
     }
 
     #endregion
@@ -638,12 +605,9 @@ public class PlayerMove : MonoBehaviour
 
     public void HandleJump()
     {
-        if (Input.GetKeyDown(jumpKey))
+        if (Input.GetKeyDown(jumpKey) && CanJump)
         {
-            if (CanJump)
-            {
-                Jump();
-            }
+            Jump();
         }
     }
 
@@ -703,7 +667,7 @@ public class PlayerMove : MonoBehaviour
 
             Controller.Move(Vector3.ClampMagnitude(ForwardMovement + RightMovement, 1.0f) * (GetTargetSpeed / FallSettings.AirResistance) * FallSettings.AirControlFactor * Time.deltaTime);
 
-            Controller.Move(Vector3.up * jumpForce * JumpSettings.Force * Time.deltaTime);
+            Controller.Move(jumpForce * JumpSettings.Force * Time.deltaTime * Vector3.up);
 
             jumpTime += Time.deltaTime;
 
@@ -905,8 +869,6 @@ public class PlayerMove : MonoBehaviour
         Controller.slopeLimit = DefaultSettings.ControllerSlopeLimit;
         Controller.SimpleMove(Vector3.zero);
 
-
-
         yield return null;
 
         // Go to climb point
@@ -990,9 +952,9 @@ public class PlayerMove : MonoBehaviour
             HandIK.SetRightTargetPosition(m_current_GrabObject.rightHandIKTarget.position, true);
         }
     }
-    private void StartClimb(bool fh)
+    private void StartClimb(bool isFreehangObject)
     {
-        if(fh)
+        if(isFreehangObject)
         {
             SetHandsIkOnClimbTarget();
         }
@@ -1008,7 +970,7 @@ public class PlayerMove : MonoBehaviour
         Animator.SetBool(AnimationHashUtility.Hanging, false);
         HandIK.ResetBodyLook();
         Climbing = true;
-        StartCoroutine(GoToClimbEndTarget(fh));
+        StartCoroutine(GoToClimbEndTarget(isFreehangObject));
     }
     private IEnumerator GoToClimbEndTarget(bool fh)
     {
@@ -1152,59 +1114,11 @@ public class PlayerMove : MonoBehaviour
 
     #region Vault
 
-    private void HandleVault()
+    private void HandleVaultRefactored()
     {
-        if (!JumpingOnto && !Vaulting && !Jumping && !Landing && OnGround && !PlayingFallingAnimation && !Falling && !Animator.GetBool(AnimationHashUtility.PlayingJumpAnimation))
+        if(Input.GetKeyDown(jumpKey) && CanVault)
         {
-            if (ThereIsSomethingInFrontOfMeChin)
-            {
-                if (VaultableObjectForward)
-                {
-                    if (!ThereIsSomethingInFrontOfMeChest)
-                    {
-                        if (InVaultableAngle)
-                        {
-                            CanVault = true;
-
-                            if (Input.GetKeyDown(jumpKey))
-                            {
-                                VaultMethod();
-                            }
-
-                            return;
-                        }
-                        else
-                        {
-                            CanVault = false;
-                        }
-                    }
-                    else
-                    {
-                        CanVault = false;
-                    }
-                }
-                else
-                {
-                    CanVault = false;
-                    //print("can jump onto");
-                    if (m_lastVaultableObj)
-                    {
-                        m_lastVaultableObj.DisableTooltip();
-                    }
-                }
-            }
-            else
-            {
-                if (m_lastVaultableObj)
-                {
-                    m_lastVaultableObj.DisableTooltip();
-                }
-                CanVault = false;
-            }
-        }
-        else
-        {
-            CanVault = false;
+            VaultMethod();
         }
     }
     private void VaultMethod()
@@ -1227,56 +1141,86 @@ public class PlayerMove : MonoBehaviour
             VaultableObject vaultObject = m_hitForwardVault.transform.GetComponent<VaultableObject>();
 
             // Set the correct animation based on the default direction of the vault and if there is something on the path of the default direction
+            VaultDirection finalDirection = vaultObject.defaultDirection;
             switch (vaultObject.defaultDirection)
             {
+                case VaultDirection.Forward:
+                    Animator.SetBool(AnimationHashUtility.MonkeyVault, true);
+                    finalDirection = VaultDirection.Forward;
+                    break;
                 case VaultDirection.Left:
                     if (!SomethingRight)
                     {
                         Animator.SetBool(AnimationHashUtility.VaultRight, false);
+                        finalDirection = VaultDirection.Left;
                     }
                     else if (SomethingRight)
                     {
                         Animator.SetBool(AnimationHashUtility.VaultRight, true);
+                        finalDirection = VaultDirection.Right;
                     }
                     else if (SomethingRight && SomethingLeft)
                     {
-                        Animator.SetBool(AnimationHashUtility.VaultRight, false);
+                        Animator.SetBool(AnimationHashUtility.MonkeyVault, true);
+                        finalDirection = VaultDirection.Forward;
                     }
                     break;
                 case VaultDirection.Right:
                     if (!SomethingLeft)
                     {
                         Animator.SetBool(AnimationHashUtility.VaultRight, true);
+                        finalDirection = VaultDirection.Right;
                     }
                     else if (SomethingLeft)
                     {
                         Animator.SetBool(AnimationHashUtility.VaultRight, false);
+                        finalDirection = VaultDirection.Left;
                     }
                     else if (SomethingRight && SomethingLeft)
                     {
-                        Animator.SetBool(AnimationHashUtility.VaultRight, false);
+                        Animator.SetBool(AnimationHashUtility.MonkeyVault, true);
+                        finalDirection = VaultDirection.Forward;
                     }
                     break;
+                default:
+                    Animator.SetBool(AnimationHashUtility.MonkeyVault, true);
+                    finalDirection = VaultDirection.Forward;
+                    break;
             }
+
+            VaultSpeed vaultMode = AnimatorVertical < 0.1f ? VaultSpeed.Idle : AnimatorVertical <= 1 && AnimatorVertical >= 0.1f ? VaultSpeed.Walking : AnimatorVertical > 1 ? VaultSpeed.Running : VaultSpeed.Idle;
+
+            if (finalDirection == VaultDirection.Forward && AnimatorVertical >= 0.1f)
+            {
+                vaultMode = VaultSpeed.Monkey;
+            }
+            else
+            {
+                Animator.SetBool(AnimationHashUtility.MonkeyVault, false);
+                finalDirection = vaultObject.defaultDirection;
+                if (finalDirection == VaultDirection.Right)
+                {
+                    Animator.SetBool(AnimationHashUtility.VaultRight, true);
+                    
+                }
+                else if(finalDirection == VaultDirection.Left)
+                {
+                    Animator.SetBool(AnimationHashUtility.VaultRight, false);
+                }
+                else
+                {
+                    Animator.SetBool(AnimationHashUtility.VaultRight, true);
+                    finalDirection = VaultDirection.Right;
+                }
+            }
+
+            VaultDirection vaultDirection = finalDirection;
 
             m_targetFinalVault = m_hitForwardVault.point + (transform.forward * ((1 * VaultSettings.SpeedMaxDistanceMultiplier) + vaultObject.Thickness));
             m_targetFinalVault.y = HasGroundForVaultEnd(vaultObject.Thickness) ? m_hitDownVault.point.y : transform.position.y;
 
             AnimationBehaviorVault[] vaultBehaviours = Animator.GetBehaviours<AnimationBehaviorVault>();
 
-            VaultSpeed vaultMode = AnimatorVertical < 0.1f ? VaultSpeed.Idle : AnimatorVertical <= 1 && AnimatorVertical >= 0.1f ? VaultSpeed.Walking : AnimatorVertical > 1 ? VaultSpeed.Running : VaultSpeed.Idle;
-
-            if(Animator.GetBool("MonkeyVault"))
-            {
-                vaultMode = VaultSpeed.Monkey;
-            }
-
-            VaultDirection vaultDirection = Animator.GetBool(AnimationHashUtility.VaultRight) ? VaultDirection.Right : VaultDirection.Left;
-
-            if (DebugSettings.DebugVault)
-            {
-                Debug.Log("Started vaulting to: " + vaultDirection.ToString() + " in a " + vaultMode.ToString() + " state.");
-            }
 
             foreach (AnimationBehaviorVault behavior in vaultBehaviours)
             {
@@ -1302,6 +1246,13 @@ public class PlayerMove : MonoBehaviour
                             Animator.SetFloat(AnimationHashUtility.Vertical, 1);
                             m_TargetSpeed = 0;
                             break;
+                        case VaultSpeed.Monkey:
+                            Animator.SetBool(AnimationHashUtility.VaultRun, false);
+                            Animator.SetBool(AnimationHashUtility.MonkeyVault, true);
+                            Animator.SetBool(AnimationHashUtility.Idle, false);
+                            Animator.SetFloat(AnimationHashUtility.Vertical, 1);
+                            m_TargetSpeed = 0;
+                            break;
                     }
 
                     bv = behavior;
@@ -1315,6 +1266,7 @@ public class PlayerMove : MonoBehaviour
                     if (DebugSettings.DebugVault)
                     {
                         string debugResult = HasGroundForVaultEnd(vaultObject.Thickness) ? "Vault with land position" : "Vault without land position";
+                        Debug.Log("Started vaulting to: " + vaultDirection.ToString() + " in a " + vaultMode.ToString() + " state.");
                         Debug.Log(debugResult);
                     }
 
@@ -1326,7 +1278,6 @@ public class PlayerMove : MonoBehaviour
 
     private void StartVault()
     {
-        CanVault = false;
         Vaulting = true;
         Falling = false;
         MouseLook.UpdateRotation = false;
@@ -1337,7 +1288,6 @@ public class PlayerMove : MonoBehaviour
 
         Animator.ResetTrigger(AnimationHashUtility.Land);
         Animator.SetTrigger(AnimationHashUtility.Vault);
-       // Debug.Break();
     }
 
     private void PlaceHandOnVaultTarget(VaultableObject vaultableObject, VaultDirection directionVault)
@@ -1387,6 +1337,26 @@ public class PlayerMove : MonoBehaviour
 
                 HandIK.StartFollowingTargets(false, true);
 
+                break;
+            case VaultDirection.Forward:
+
+                RaycastHit hitRF;
+                RaycastHit hitLF;
+                bool foundHandPlacementRightForward = Physics.Raycast(PlayerMiddle + transform.right, transform.forward, out hitRF, GetCurrentVaultCheckDistance + 0.5f, VaultSettings.Layers);
+                bool foundHandPlacementLeftForward = Physics.Raycast(PlayerMiddle - transform.right, transform.forward, out hitLF, GetCurrentVaultCheckDistance + 0.5f, VaultSettings.Layers);
+                Vector3 targetForwardHandPositionRight = foundHandPlacementRightForward ? hitRF.point : m_hitForwardVault.point + transform.right;
+                Vector3 targetForwardHandPositionLeft = foundHandPlacementLeftForward ? hitLF.point : m_hitForwardVault.point + -transform.right;
+
+                targetForwardHandPositionRight.y += vaultableObject.Height;
+                targetForwardHandPositionLeft.y += vaultableObject.Height;
+
+                HandIK.SetTargetPositions(targetForwardHandPositionLeft, targetForwardHandPositionRight, false);
+
+                HandIK.SetTargetsParent(vaultableObject.transform);
+
+                HandIK.SetTargetRotations(transform.rotation, transform.rotation);
+                HandIK.WeightSpeed = 3;
+                HandIK.StartFollowingTargets(true, true);
                 break;
         }
 
@@ -1441,33 +1411,28 @@ public class PlayerMove : MonoBehaviour
         Animator.SetBool(AnimationHashUtility.Vaulting, false);
         Controller.center = DefaultSettings.ControllerCenter;
         Controller.height = DefaultSettings.ControllerHeight;
-        m_lastVaultableObj.DisableTooltip();
     }
 
     #endregion
 
     #region JumpingOnto
 
-    public bool JumpingOnto { get; private set; } = false;
-    private void JumpOntoMethod()
+    public bool JumpingOnto 
     {
-        StartJumpOnto();
+        get
+        {
+            return Animator.GetBool(AnimationHashUtility.JumpingOnto);
+        } 
     }
     private void StartJumpOnto()
     {
-        CanVault = false;
-        Vaulting = false;
-        JumpingOnto = true;
-        Falling = false;
-        Animator.SetBool(AnimationHashUtility.JumpingOnto, true);
-        GrabableObject grabableObject = m_ForwardOntoHit.transform.GetComponent<GrabableObject>();
-        m_targetPosJumpOnto = grabableObject.endTarget.position;
-        Animator.ResetTrigger(AnimationHashUtility.Land);
+        if (JumpingOnto || Animator.GetBool(AnimationHashUtility.JumpingOnto))
+        {
+            return;
+        }
+        m_targetPosJumpOnto = GetJumpOntoEndPosition();
         Animator.SetTrigger(AnimationHashUtility.JumpOnto);
-        var temp = Animator.GetBehaviour<JumpingOntoBehavior>();
-        temp.Reset();
-        StartCoroutine(JumpOntoLerpDelta(temp));
-        //Debug.Break();
+        StartCoroutine(JumpOntoLerpDelta(Animator.GetBehaviour<JumpingOntoBehavior>()));
     }
 
     private IEnumerator JumpOntoLerpDelta(JumpingOntoBehavior jumpingOntoAnim)
@@ -1482,7 +1447,7 @@ public class PlayerMove : MonoBehaviour
         do
         {
             transform.position = Vector3.SlerpUnclamped(startPos, m_targetPosJumpOnto, jumpingOntoAnim.AnimationDelta);
-            PlayerCamera.position = Vector3.Lerp(PlayerCamera.position, PlayerHead.position, Speed.VaultCameraSpeed * Time.deltaTime);
+            PlayerCamera.position = PlayerHead.position;
             yield return null;
         } while (!jumpingOntoAnim.Complete);
         EndJumpOnto();
@@ -1490,40 +1455,31 @@ public class PlayerMove : MonoBehaviour
 
     private void EndJumpOnto()
     {
-        JumpingOnto = false;
         Falling = false;
-        Animator.SetBool(AnimationHashUtility.JumpingOnto, false);
-    }
 
+        if (DebugSettings.DebugVault)
+        {
+            Debug.Log("End Jump Onto");
+        }
+    }
+  
     public bool JumpOntoObjectForward
     {
         get
         {
-            if (Physics.Raycast(PlayerMiddle, transform.forward, out m_ForwardOntoHit, VaultSettings.JumpOntoMaxDistance, VaultSettings.Layers))
-            {
-                if (m_ForwardOntoHit.transform.tag == "JumpOnto")
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            return false;
+            return HasGroundForJumpOntoEnd() && Physics.Raycast(PlayerMiddle, transform.forward, out m_ForwardOntoHit, VaultSettings.JumpOntoMaxDistance, VaultSettings.Layers) && ThereIsSomethingInFrontOfMyKnees;
         }
     }
     public void HandleJumpingOnto()
     {
-        if (!Vaulting && !Jumping && !Landing && OnGround && !PlayingFallingAnimation && !Falling && !Animator.GetBool(AnimationHashUtility.PlayingJumpAnimation))
+        if (!Vaulting && !Jumping && !Landing && OnGround && !PlayingFallingAnimation && !Falling && !Animator.GetBool(AnimationHashUtility.PlayingJumpAnimation) && !JumpingOnto)
         {
             if (JumpOntoObjectForward && InVaultableAngle)
             {
                 CanJumpOnto = true;
                 if (Input.GetKeyDown(jumpKey))
                 {
-                    JumpOntoMethod();
+                    StartJumpOnto();
                 }
 
                 return;
@@ -1732,7 +1688,7 @@ public class PlayerMove : MonoBehaviour
         }
         else
         {
-            if (Vaulting)
+            if (Vaulting || JumpingOnto)
             {
                 PlayerCamera.position = Vector3.Lerp(PlayerCamera.position, PlayerHead.position, Speed.VaultCameraSpeed * Time.deltaTime);
             }
@@ -1754,7 +1710,6 @@ public class PlayerMove : MonoBehaviour
     private void HandleAnimations()
     {
         SpeedFactor = PressingRunKey ? GetPlayerVelocity / Speed.RunSpeed : GetPlayerVelocity / Speed.WalkSpeed;
-
         TargetHorizontal = (HorizontalInput * RunFactor) * SpeedFactor;
         TargetVertical = (VerticalInput * RunFactor) * SpeedFactor;
 
@@ -1802,7 +1757,7 @@ public class PlayerMove : MonoBehaviour
 
     private void HandleSlideUnder()
     {
-        if ((Input.GetKeyDown(slideKey) || Input.GetKey(slideKey)) && CanSlide)
+        if (Input.GetKeyDown(slideKey) && CanSlide)
         {
             StartSlide();
         }
@@ -1920,18 +1875,8 @@ public class PlayerMove : MonoBehaviour
     public bool CanJump
     {
         get
-        {
-            if (CanHang || CanVault || CanJumpOnto)
-            {
-                return false;
-            }
-
-            if (Hanging || Climbing)
-            {
-                return false;
-            }
-
-            if (Jumping || Vaulting || Falling || Sliding)
+        { 
+            if (CanHang || CanVault || CanJumpOnto || Hanging || Climbing || HasSomethingAboveHead || PlayingFallingAnimation || Jumping || Vaulting || Falling || Sliding || Landing)
             {
                 if (DebugSettings.DebugCanJump)
                 {
@@ -1941,51 +1886,19 @@ public class PlayerMove : MonoBehaviour
                     reason += Vaulting ? " Vaulting" : "";
                     reason += Vaulting ? " Falling" : "";
                     reason += Sliding ? " Sliding" : "";
+                    reason += PlayingFallingAnimation ? " playing Falling Animation" : "";
+                    reason += HasSomethingAboveHead ? " has something above head" : "";
+                    reason += Landing ? " is playing Landing Anim" : "";
 
                     Debug.Log("Cannot jump because is" + reason);
-                }
 
-                return false;
-            }
+                    if (!GroundHit && !Controller.isGrounded && FarFromGround)
+                    {
+                        Debug.Log("Cannot jump because is not grounded");
+                        Debug.Log("Ground hits = " + GroundHit);
+                        Debug.Log("Far from ground = " + FarFromGround);
+                    }
 
-            if (HasSomethingAboveHead)
-            {
-                if (DebugSettings.DebugCanJump)
-                {
-                    Debug.Log("Cannot jump because has something above head");
-                }
-
-                return false;
-            }
-
-            if (PlayingFallingAnimation)
-            {
-                if (DebugSettings.DebugCanJump)
-                {
-                    Debug.Log("Cannot jump because is playing Falling Animation");
-                }
-
-                return false;
-            }
-
-            if (Landing)
-            {
-                if (DebugSettings.DebugCanJump)
-                {
-                    Debug.Log("Cannot jump because is playing Landing Anim");
-                }
-
-                return false;
-            }
-
-            if (!GroundHit && !Controller.isGrounded && FarFromGround)
-            {
-                if (DebugSettings.DebugCanJump)
-                {
-                    Debug.Log("Cannot jump because is not grounded");
-
-                    Debug.Log("Ground hits = " + GroundHit);
-                    Debug.Log("Far from ground = " + FarFromGround);
                 }
 
                 return false;
@@ -1999,39 +1912,12 @@ public class PlayerMove : MonoBehaviour
 
     #region Slide Below
 
-    public bool CanSlide
-    {
-        get
-        {
-            if (AnimatorVertical > 1f && !SlidingUnder && OnGround && !SomethingOnKneesHeight && OnGround)
-            {
-                return true;
-            }
+    public bool CanSlide { get { return AnimatorVertical > 1f && !SlidingUnder && OnGround && !SomethingOnKneesHeight; } }
 
-            return false;
-        }
-    }
+    public bool SlidingUnder { get { return Animator.GetBool(AnimationHashUtility.PlayingSlideAnimation) && m_Sliding_Under; } }
 
-    public bool SlidingUnder
-    {
-        get
-        {
-            return Animator.GetBool(AnimationHashUtility.PlayingSlideAnimation) && m_Sliding_Under;
-        }
-    }
-
-    public bool SomethingOnKneesHeight
-    {
-        get
-        {
-            if (Physics.Raycast(transform.position + Vector3.up, transform.forward, 9))
-            {
-                return true;
-            }
-
-            return false;
-        }
-    }
+    public bool SomethingOnKneesHeight { get { return Physics.Raycast(transform.position + Vector3.up, transform.forward, 9); } }
+  
 
     #endregion
 
@@ -2179,7 +2065,25 @@ public class PlayerMove : MonoBehaviour
 
     #region Vaulting
 
-    public bool CanVault { get; private set; } = false;
+    public bool CanVault 
+    { 
+        get
+        {
+            return 
+                !JumpingOnto && 
+                !Vaulting && 
+                !Jumping && 
+                !Landing && 
+                OnGround && 
+                !PlayingFallingAnimation && 
+                !Falling && 
+                !Animator.GetBool(AnimationHashUtility.PlayingJumpAnimation) &&
+                ThereIsSomethingInFrontOfMeChin &&
+                VaultableObjectForward &&
+                !ThereIsSomethingInFrontOfMeChest;
+        }
+        private set { }
+    } 
     public bool Vaulting { get; private set; } = false;
     public bool CanJumpOnto { get; private set; } = false;
 
@@ -2206,11 +2110,35 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
+    private Vector3 VaultRaycastMiddleStart
+    {
+        get
+        {
+            return transform.position + new Vector3(0, VaultSettings.MinVaultHeight, 0);
+        }
+    }
+
+    private Vector3 JumpOntoRaycastStart
+    {
+        get
+        {
+            return transform.position + new Vector3(0, DefaultSettings.ControllerHeight / 4, 0);
+        }
+    }
+
     public bool ThereIsSomethingInFrontOfMeChin
     {
         get
         {
-            return Physics.Raycast(PlayerMiddle, transform.forward, out m_hitForwardVault, GetCurrentVaultCheckDistance, VaultSettings.Layers);
+            return Physics.Raycast(VaultRaycastMiddleStart, transform.forward, out m_hitForwardVault, GetCurrentVaultCheckDistance, VaultSettings.Layers);
+        }
+    }
+
+    public bool ThereIsSomethingInFrontOfMyKnees
+    {
+        get
+        {
+            return Physics.Raycast(JumpOntoRaycastStart, transform.forward, out m_hitForwardJumpUp, GetCurrentVaultCheckDistance, VaultSettings.Layers);
         }
     }
 
@@ -2226,10 +2154,9 @@ public class PlayerMove : MonoBehaviour
     {
         get
         {
-            if (m_hitForwardVault.transform.tag == "Vaultable")
+            if (m_hitForwardVault.transform.CompareTag("Vaultable"))
             {
                 m_lastVaultableObj = m_hitForwardVault.transform.GetComponent<VaultableObject>();
-                m_lastVaultableObj.EnableTooltip();
             }
 
             return VaultSettings.VaultableTags.Contains(m_hitForwardVault.transform.tag);
@@ -2241,6 +2168,24 @@ public class PlayerMove : MonoBehaviour
         m_hasGroundForVaultRayStart = PlayerMiddle + (transform.forward * (GetCurrentVaultCheckDistance + vaultThickness));
 
         return Physics.Raycast(m_hasGroundForVaultRayStart, Vector3.down, out m_hitDownVault, 2.01f);
+    }
+
+    public bool HasGroundForJumpOntoEnd()
+    {
+        m_hasGroundForJumpUpEnd = (transform.position + new Vector3(0, DefaultSettings.ControllerHeight, 0) + (transform.forward * 1.3f));
+
+        return Physics.Raycast(m_hasGroundForJumpUpEnd, Vector3.down, out m_hitDownJumpUp, 10);
+    }
+
+    public Vector3 GetJumpOntoEndPosition()
+    {
+
+        Vector3 start = transform.position + (transform.forward * 1.3f);
+        start.y += 4;
+
+        Physics.Raycast(start, Vector3.down, out RaycastHit hitPoint, 10);
+
+        return hitPoint.point;
     }
 
     public float GetCurrentVaultCheckDistance
@@ -2272,29 +2217,11 @@ public class PlayerMove : MonoBehaviour
     #region Climbing
 
     public bool CanHang { get; private set; } = false;
-
     public bool Hanging { get; private set; } = false;
-
     public bool Climbing { get; private set; } = false;
-
     public bool GoingToHangTarget { get; private set; } = false;
-
-    public bool GrabableObjectForward
-    {
-        get
-        {
-            return ClimbSettings.HangableTags.Contains(m_fwdHit.transform.tag);
-        }
-    }
-
-    public bool InHangableAngle
-    {
-        get
-        {
-            return (CurrentHangAngle >= ClimbSettings.MaxAngle && CurrentHangAngle <= 180);
-        }
-    }
-
+    public bool GrabableObjectForward { get { return ClimbSettings.HangableTags.Contains(m_fwdHit.transform.tag); } }
+    public bool InHangableAngle { get { return (CurrentHangAngle >= ClimbSettings.MaxAngle && CurrentHangAngle <= 180); } }
     public float CurrentHangAngle
     {
         get
@@ -2305,13 +2232,8 @@ public class PlayerMove : MonoBehaviour
 
     public Transform LastHangObject { get; private set; } = null;
 
-    public bool HasSomethingForward
-    {
-        get
-        {
-            return Physics.Raycast(PlayerCamera.position, PlayerCamera.forward, out m_fwdHit, ClimbSettings.MaxDistance, ClimbSettings.Layers, QueryTriggerInteraction.Collide);
-        }
-    }
+    public bool HasSomethingForward { get { return Physics.Raycast(PlayerCamera.position, PlayerCamera.forward, out m_fwdHit, ClimbSettings.MaxDistance, ClimbSettings.Layers, QueryTriggerInteraction.Collide); } }
+ 
 
     public bool EnableHandsIK { get; set; }
 
@@ -2355,13 +2277,7 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    public Vector3 MiddleRayStart
-    {
-        get
-        {
-            return transform.position + m_groundCheckOffset;
-        }
-    }
+    public Vector3 MiddleRayStart { get { return transform.position + m_groundCheckOffset; } }
 
     #endregion
 
@@ -2391,77 +2307,32 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    public bool GroundHit
-    {
-        get
-        {
-            if (Physics.CheckSphere(CheckSpherePosition, Controller.radius, FallSettings.GroundLayers, QueryTriggerInteraction.Ignore))
-            {
-                return true;
-            }
-
-            return false;
-        }
-    }
+    public bool GroundHit { get { return Physics.CheckSphere(CheckSpherePosition, Controller.radius, FallSettings.GroundLayers, QueryTriggerInteraction.Ignore); } }
+ 
 
     public bool HasSomethingAboveHead
     {
         get
         {
-            if (GoingToHangTarget)
+            if (GoingToHangTarget || !Physics.SphereCast(ColliderTop, Controller.radius, Vector3.up, out m_aboveHeadHit, CurrentHeadHitAboveRayLenght))
             {//Prevent Collider Missing Null Reference
-                return false;
-            }
-
-            if (!Physics.SphereCast(ColliderTop, Controller.radius, Vector3.up, out m_aboveHeadHit, CurrentHeadHitAboveRayLenght))
-            {
                 return false;
             }
 
             if(Climbing)
             {
-                if (!Physics.SphereCast(transform.position + CrouchSettings.ControllerCenter, Controller.radius, Vector3.up, out m_aboveHeadHit, CrouchSettings.HeadHitAboveRayLenght))
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                return Physics.SphereCast(transform.position + CrouchSettings.ControllerCenter, Controller.radius, Vector3.up, out m_aboveHeadHit, CrouchSettings.HeadHitAboveRayLenght);
             }
 
             return true;
         }
     }
 
-    public bool OnGround
-    {
-        get
-        {
-            if (CheckGround && GroundHit)
-            {
-                return true;
-            }
+    public bool OnGround { get { return CheckGround && GroundHit; } }
 
-            return false;
-        }
-    }
+    public bool Landing { get { return Animator.GetBool(AnimationHashUtility.PlayingLandAnimation); } }
 
-    public bool Landing
-    {
-        get
-        {
-            return Animator.GetBool(AnimationHashUtility.PlayingLandAnimation);
-        }
-    }
-
-    public bool HardLanding
-    {
-        get
-        {
-            return Animator.GetBool(AnimationHashUtility.HardLanding);
-        }
-    }
+    public bool HardLanding { get { return Animator.GetBool(AnimationHashUtility.HardLanding); } }
 
     public Vector3 CheckSpherePosition
     {
@@ -2482,21 +2353,8 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    public float HorizontalInput
-    {
-        get
-        {
-            return Input.GetAxis("Horizontal");
-        }
-    }
-
-    public float VerticalInput
-    {
-        get
-        {
-            return Input.GetAxis("Vertical");
-        }
-    }
+    public float HorizontalInput { get { return Input.GetAxis("Horizontal"); } }
+    public float VerticalInput { get { return Input.GetAxis("Vertical"); } }
 
     public float SpeedFactor { get; private set; } = 0;
 
@@ -2504,37 +2362,13 @@ public class PlayerMove : MonoBehaviour
 
     public float TargetVertical { get; private set; } = 0;
 
-    public float AnimatorVertical
-    {
-        get
-        {
-            return Animator.GetFloat(AnimationHashUtility.Vertical);
-        }
-    }
+    public float AnimatorVertical { get { return Animator.GetFloat(AnimationHashUtility.Vertical); } }
 
-    public float AnimatorHorizontal
-    {
-        get
-        {
-            return Animator.GetFloat(AnimationHashUtility.Horizontal);
-        }
-    }
+    public float AnimatorHorizontal { get { return Animator.GetFloat(AnimationHashUtility.Horizontal); } }
 
-    public bool PressingRunKey
-    {
-        get
-        {
-            return Input.GetKey(runKey);
-        }
-    }
+    public bool PressingRunKey { get { return Input.GetKey(runKey); } }
 
-    public float RunFactor
-    {
-        get
-        {
-            return PressingRunKey ? 2 : 1;
-        }
-    }
+    public float RunFactor { get { return PressingRunKey ? 2 : 1; } }
 
     public float PlayerVelocity { get; private set; }
 
@@ -2543,7 +2377,6 @@ public class PlayerMove : MonoBehaviour
         get
         {
             m_thisFrameVelocityVector = (transform.position - m_lastPlayerPos) / Time.deltaTime;
-
             m_lastPlayerPos = transform.position;
 
             m_playerVelocityVector.x = m_thisFrameVelocityVector.x;
@@ -2564,67 +2397,40 @@ public class PlayerMove : MonoBehaviour
                 m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, Speed.BalanceSpeed, Time.deltaTime * Speed.Acceleration);
                 return m_TargetSpeed;
             }
-            
-            
-            if (!SlidingUnder)
+
+            if (Crouched)
             {
-                if (PressingRunKey)
-                {
-                    if (!Crouched)
-                    {
-                        m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, Speed.RunSpeed, Time.deltaTime * Speed.Acceleration);
-                    }
-                }
-                else if ((VerticalInput != 0 || HorizontalInput != 0) && !PressingRunKey)
-                {
-                    if (!Crouched)
-                    {
-                        m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, Speed.WalkSpeed, Time.deltaTime * Speed.Acceleration);
-                    }
-                    else
-                    {
-                        m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, Speed.CrouchedSpeed, Time.deltaTime * Speed.Acceleration);
-                    }
-                }
-                else if (VerticalInput == 0 && HorizontalInput == 0)
-                {
-                    m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, 0, Time.deltaTime * Speed.Acceleration);
-                }
+                m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, Speed.CrouchedSpeed, Time.deltaTime * Speed.Acceleration);
+                return m_TargetSpeed;
             }
-            else
+
+            if (SlidingUnder)
             {
                 m_TargetSpeed = Speed.SlideUnderSpeed;
+                return m_TargetSpeed;
             }
 
+            if (VerticalInput == 0 && HorizontalInput == 0)
+            {
+                m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, 0, Time.deltaTime * Speed.Acceleration);
+                return m_TargetSpeed;
+            }
 
+            if (PressingRunKey)
+            {
+                m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, Speed.RunSpeed, Time.deltaTime * Speed.Acceleration);
+                return m_TargetSpeed;
+            }
+
+            /// Walk Speed
+            m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, Speed.WalkSpeed, Time.deltaTime * Speed.Acceleration);
             return m_TargetSpeed;
         }
     }
 
-    public Vector3 RightMovement
-    {
-        get
-        {
-            return transform.right * HorizontalInput;
-        }
-    }
-
-    public Vector3 ForwardMovement
-    {
-        get
-        {
-            return transform.forward * VerticalInput;
-        }
-    }
-
-    public Vector3 PlayerMiddle
-    {
-        get
-        {
-            return transform.position + new Vector3(0, Controller.height / 2, 0);
-        }
-    }
-
+    public Vector3 RightMovement { get { return transform.right * HorizontalInput; } }
+    public Vector3 ForwardMovement { get { return transform.forward * VerticalInput; } }
+    public Vector3 PlayerMiddle{ get { return transform.position + new Vector3(0, Controller.height / 2, 0); } }
     public Vector3 ColliderBotton
     {
         get

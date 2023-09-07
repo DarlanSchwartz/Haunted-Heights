@@ -37,6 +37,7 @@ public static class AnimationHashUtility
     public readonly static int Idle = Animator.StringToHash("Idle");
     public readonly static int VaultRun = Animator.StringToHash("VaultRun");
     public readonly static int VaultRight = Animator.StringToHash("VaultRight");
+    public readonly static int MonkeyVault = Animator.StringToHash("MonkeyVault");
     public readonly static int FarFromGround = Animator.StringToHash("FarFromGround");
 
     

@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 
-public enum VaultDirection { Left, Right}
+public enum VaultDirection { Left, Right , Forward}
 public enum VaultSpeed { Idle, Walking, Running, Monkey}
 
 public class VaultableObject : MonoBehaviour
 {
-    public Transform Vaultip;
     [SerializeField]
+    [Tooltip("This controls where the hand will be placed")]
     private float _vaultHeight = 0.3f;
     [SerializeField]
     private float _vaultThickness = 0.4f;
@@ -16,18 +16,4 @@ public class VaultableObject : MonoBehaviour
     public float Thickness { get => _vaultThickness; }
 
     public VaultDirection defaultDirection = VaultDirection.Left;
-
-    public void EnableTooltip()
-    {
-        if (!Vaultip)
-            return;
-        Vaultip.gameObject.SetActive(true);
-    }
-
-    public void DisableTooltip()
-    {
-        if (!Vaultip)
-            return;
-        Vaultip.gameObject.SetActive(false);
-    }
 }

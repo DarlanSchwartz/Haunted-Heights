@@ -15,8 +15,8 @@ MonoBehaviour:
   Mode: 1
   HeadHitAboveRayLenght: 2
   ControllerStepOffset: 0.1
-  ControllerHeight: 2.2
-  ControllerCenter: {x: 0, y: 1.1, z: 0}
+  ControllerHeight: 2
+  ControllerCenter: {x: 0, y: 1, z: 0}
   UseStamina: 1
   MaxStamina: 1
   StaminaDecreasePerCrouch: 0.2

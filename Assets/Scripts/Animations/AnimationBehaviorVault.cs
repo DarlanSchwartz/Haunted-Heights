@@ -21,6 +21,7 @@ public class AnimationBehaviorVault : StateMachineBehaviour
     public override void OnStateExit(Animator animator, AnimatorStateInfo animatorStateInfo, int layerIndex)
     {
         animator.SetBool(AnimationHashUtility.PlayingVaultAnimation, false);
+        animator.SetBool(AnimationHashUtility.VaultRight, false);
     }
 
     public void Reset()
