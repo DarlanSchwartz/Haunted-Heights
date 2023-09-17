@@ -4543,14 +4543,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1280264994}
-  m_LocalRotation: {x: 0, y: 0.70327675, z: 0, w: 0.71091616}
-  m_LocalPosition: {x: -44.011116, y: 19.433475, z: 9.054858}
+  m_LocalRotation: {x: 0, y: -1, z: 0, w: 0}
+  m_LocalPosition: {x: -13.57391, y: 17.398184, z: -59.35312}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 6
-  m_LocalEulerAnglesHint: {x: 0, y: 89.381, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
 --- !u!1001 &1305069544
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5573,12 +5573,16 @@ PrefabInstance:
       value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 6660237468570551476, guid: ffa5691a465466d44a1db83fedefeba1, type: 3}
+      propertyPath: m_Depth
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6660237468570551476, guid: ffa5691a465466d44a1db83fedefeba1, type: 3}
       propertyPath: m_AllowMSAA
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6660237468570551476, guid: ffa5691a465466d44a1db83fedefeba1, type: 3}
       propertyPath: far clip plane
-      value: 10
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 6660237468570551479, guid: ffa5691a465466d44a1db83fedefeba1, type: 3}
       propertyPath: m_IsActive
@@ -5602,7 +5606,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6660237468767038037, guid: ffa5691a465466d44a1db83fedefeba1, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 10.5
+      value: 17.75
       objectReference: {fileID: 0}
     - target: {fileID: 6660237468767038037, guid: ffa5691a465466d44a1db83fedefeba1, type: 3}
       propertyPath: m_LocalPosition.z

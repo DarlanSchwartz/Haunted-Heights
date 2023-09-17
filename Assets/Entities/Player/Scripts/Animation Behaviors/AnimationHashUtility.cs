@@ -19,6 +19,7 @@ public static class AnimationHashUtility
     public readonly static int Slide = Animator.StringToHash("Slide");
     public readonly static int EndSlide = Animator.StringToHash("EndSlide");
     public readonly static int HardLanding = Animator.StringToHash("HardLanding");
+    public readonly static int RollLanding = Animator.StringToHash("RollLanding");
 
     public readonly static int MotionTimeDelta = Animator.StringToHash("MotionTimeDelta");
     public readonly static int Balance = Animator.StringToHash("InBalanceMode");

@@ -110,6 +110,11 @@ public partial class PlayerMove : MonoBehaviour
         restartPos = thisTransform.position;
 
         CameraComponent = MouseLook != null ? MouseLook.transform.GetComponent<Camera>() : null;
+
+        animator.GetBehaviour<RollLandingBehavior>().onStart.AddListener(StartRoll);
+        animator.GetBehaviour<RollLandingBehavior>().onEnd.AddListener(EndRoll);
+
+
     }
     private void Update()
     {
@@ -207,6 +212,11 @@ public partial class PlayerMove : MonoBehaviour
         if (HardLanding)
         {
             return;
+        }
+
+        if (RollLanding)
+        {
+            MouseLook.transform.rotation = Quaternion.Slerp(MouseLook.transform.rotation, Quaternion.LookRotation(PlayerHead.transform.forward), Time.deltaTime * 500);
         }
 
         if (Vaulting || Hanging || SlidingUnder || JumpingOnto)
@@ -411,20 +421,7 @@ public partial class PlayerMove : MonoBehaviour
 
     public bool Sliding { get { return SlopeAngle > DefaultSettings.ControllerSlopeLimit; } }
 
-    public float SlopeAngle
-    {
-        get
-        {
-            if (OnSlope)
-            {
-                return Vector3.Angle(m_slopeHit.normal, thisTransform.up);
-            }
-            else
-            {
-                return 0;
-            }
-        }
-    }
+    public float SlopeAngle { get {  return OnSlope ? Vector3.Angle(m_slopeHit.normal, thisTransform.up) : 0; } }
 
     #endregion
 

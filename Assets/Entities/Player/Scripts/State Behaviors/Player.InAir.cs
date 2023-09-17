@@ -7,8 +7,9 @@ public partial class PlayerMove
     public bool OnGround { get { return CheckGround && GroundHit; } }
 
     public bool Landing { get { return animator.GetBool(AnimationHashUtility.PlayingLandAnimation); } }
-
+    
     public bool HardLanding { get { return animator.GetBool(AnimationHashUtility.HardLanding); } }
+    public bool RollLanding { get { return animator.GetBool(AnimationHashUtility.RollLanding); } }
     public bool FarFromGround
     {
         get
@@ -121,8 +122,22 @@ public partial class PlayerMove
         }
         else
         {
-            animator.SetFloat(AnimationHashUtility.FallHeight, LastGroundedPositionY - thisTransform.position.y);
+            float totalFallHeight = LastGroundedPositionY - thisTransform.position.y;
+            animator.SetFloat(AnimationHashUtility.FallHeight, totalFallHeight);
         }
+    }
+
+    private void StartRoll()
+    {
+        MouseLook.MaxX = 30;
+        MouseLook.MinX = -30;
+        MouseLook.transform.rotation = Quaternion.Slerp(MouseLook.transform.rotation, Quaternion.LookRotation(PlayerHead.transform.forward), Time.deltaTime * 500);
+    }
+
+    private void EndRoll()
+    {
+        MouseLook.MaxX = 75;
+        MouseLook.MinX = -90;
     }
     private void CheckFalling()
     {
