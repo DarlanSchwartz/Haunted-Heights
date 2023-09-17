@@ -4,7 +4,7 @@ using UnityEngine;
 
 public partial class PlayerMove
 {
-    public bool InBalanceMode { get; private set; }
+    public bool InBalanceState { get; private set; }
     private float motionTime = 0;
     private BalanceBeam currentBalanceBean;
     private Vector3 currentBalanceBeanTarget;
@@ -48,8 +48,8 @@ public partial class PlayerMove
     {
         m_currentTriggerStartTransform = startTrigger;
         currentBalanceBeanTarget = target;
-        InBalanceMode = true;
-        animator.SetBool(AnimationHashUtility.Balance, InBalanceMode);
+        InBalanceState = true;
+        animator.SetBool(AnimationHashUtility.Balance, InBalanceState);
         MouseLook.ClampHorizontalRotation = true;
         MouseLook.MaxY = 70;
         MouseLook.MinY = -70;
@@ -75,13 +75,39 @@ public partial class PlayerMove
     }
     public void ExitBalanceMode()
     {
-        InBalanceMode = false;
+        InBalanceState = false;
         animator.SetFloat(AnimationHashUtility.MotionTimeDelta, 1);
-        animator.SetBool(AnimationHashUtility.Balance, InBalanceMode);
+        animator.SetBool(AnimationHashUtility.Balance, InBalanceState);
         MouseLook.ClampHorizontalRotation = false;
         inBetweenBalanceMode = false;
         currentBalanceBean = null;
         animator.SetLayerWeight(2, 0);
         Debug.Log("ExitBalancemode");
+    }
+
+    private void HandleBalanceMovement()
+    {
+
+        if (m_goinToBalanceStartPos)
+        {
+            return;
+        }
+
+        thisTransform.position = Vector3.MoveTowards(thisTransform.position, currentBalanceBeanTarget, (VerticalInput * GetTargetSpeed) * Time.deltaTime);
+        animator.SetFloat(AnimationHashUtility.Vertical, VerticalInput);
+        MouseLook.LookRotation(false);
+
+        if (VerticalInput > 0)
+        {
+            motionTime += 0.5f * Time.deltaTime;
+        }
+        else if (VerticalInput < 0)
+        {
+            motionTime += 0.25f * Time.deltaTime;
+        }
+
+        PlayerCamera.position = Vector3.Lerp(PlayerCamera.position, PlayerHead.position, Speed.CrouchCameraSpeed * Time.deltaTime);
+
+        animator.SetFloat(AnimationHashUtility.MotionTimeDelta, motionTime);
     }
 }

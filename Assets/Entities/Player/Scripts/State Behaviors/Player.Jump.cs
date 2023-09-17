@@ -4,6 +4,64 @@ using UnityEngine;
 
 public partial class PlayerMove
 {
+    public bool Jumping { get; private set; } = false;
+
+    public bool CheckGround { get; private set; } = true;
+    public Vector3 CheckSpherePosition
+    {
+        get
+        {
+            if (!Vaulting)
+            {
+                m_checkSpherePosition = ColliderBotton;
+
+                m_checkSpherePosition.y += 0.2f;
+            }
+            else
+            {
+                m_checkSpherePosition = thisTransform.position;
+            }
+
+            return m_checkSpherePosition;
+        }
+    }
+    public bool GroundHit { get { return Physics.CheckSphere(CheckSpherePosition, Controller.radius, FallSettings.GroundLayers, QueryTriggerInteraction.Ignore); } }
+
+    public bool CanJump
+    {
+        get
+        {
+            if (CanHang || CanVault || CanJumpOnto || Hanging || Climbing || HasSomethingAboveHead || PlayingFallingAnimation || Jumping || Vaulting || Falling || Sliding || Landing)
+            {
+                if (DebugSettings.DebugCanJump)
+                {
+                    string reason = "";
+
+                    reason += Jumping ? " Jumping" : "";
+                    reason += Vaulting ? " Vaulting" : "";
+                    reason += Vaulting ? " Falling" : "";
+                    reason += Sliding ? " Sliding" : "";
+                    reason += PlayingFallingAnimation ? " playing Falling Animation" : "";
+                    reason += HasSomethingAboveHead ? " has something above head" : "";
+                    reason += Landing ? " is playing Landing Anim" : "";
+
+                    Debug.Log("Cannot jump because is" + reason);
+
+                    if (!GroundHit && !Controller.isGrounded && FarFromGround)
+                    {
+                        Debug.Log("Cannot jump because is not grounded");
+                        Debug.Log("Ground hits = " + GroundHit);
+                        Debug.Log("Far from ground = " + FarFromGround);
+                    }
+
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+    }
     public void Jump()
     {
         if (Crouched || SetAnimatorCrouched)
@@ -13,6 +71,12 @@ public partial class PlayerMove
                 Crouched = false;
             }
 
+            return;
+        }
+
+        if(InProneState)
+        {
+            CancelProne();
             return;
         }
 

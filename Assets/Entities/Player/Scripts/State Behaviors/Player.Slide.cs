@@ -4,7 +4,6 @@ using UnityEngine;
 
 public partial class PlayerMove
 {
-
     public bool CanSlide { get { return AnimatorVertical > 1f && !SlidingUnder && OnGround && !SomethingOnKneesHeight; } }
     public bool SlidingUnder { get { return animator.GetBool(AnimationHashUtility.PlayingSlideAnimation) && m_Sliding_Under; } }
     public bool SomethingOnKneesHeight { get { return Physics.Raycast(KneesHeightPosition, thisTransform.forward, 9); } }

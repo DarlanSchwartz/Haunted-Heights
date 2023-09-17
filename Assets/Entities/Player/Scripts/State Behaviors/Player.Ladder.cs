@@ -4,7 +4,7 @@ using UnityEngine;
 
 public partial class PlayerMove
 {
-    public bool InLadder { get; private set; }
+    public bool InLadderState { get; private set; }
     private Ladder currentLadder;
     private bool m_goingToLadderStartPos = false;
     private bool m_movingInLadder = false;
@@ -15,7 +15,7 @@ public partial class PlayerMove
     public void EnterLadder(Ladder ladder)
     {
         currentLadder = ladder;
-        InLadder = true;
+        InLadderState = true;
         MouseLook.ClampHorizontalRotation = true;
         MouseLook.MaxY = 83;
         MouseLook.MinY = -83;
@@ -219,7 +219,7 @@ public partial class PlayerMove
         currentLadder = null;
         MouseLook.ClampHorizontalRotation = false;
         FeetIK.forceFeetIk = false;
-        InLadder = false;
+        InLadderState = false;
         FeetIK.IsEnabled = true;
         animator.SetBool(AnimationHashUtility.ClimbLadderIdle, false);
         MouseLook.MaxX = defaultCameraMaxX;

@@ -34,6 +34,7 @@ public static class AnimationHashUtility
     public readonly static int Jumping = Animator.StringToHash("Jumping");
     public readonly static int OnGround = Animator.StringToHash("OnGround");
     public readonly static int Crouched = Animator.StringToHash("Crouched");
+    public readonly static int Prone = Animator.StringToHash("Prone");
     public readonly static int Idle = Animator.StringToHash("Idle");
     public readonly static int VaultRun = Animator.StringToHash("VaultRun");
     public readonly static int VaultRight = Animator.StringToHash("VaultRight");

@@ -116,7 +116,7 @@ public partial class PlayerMove
                 }
             }
         }
-        if (InLadder)
+        if (InLadderState)
         {
             Gizmos.color = Color.magenta;
             Gizmos.DrawWireSphere(thisTransform.position + ((-thisTransform.right * 0.8f) + thisTransform.forward * 2), 0.2f);

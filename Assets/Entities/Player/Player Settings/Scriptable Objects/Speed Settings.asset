@@ -15,6 +15,7 @@ MonoBehaviour:
   WalkSpeed: 5
   RunSpeed: 12
   CrouchedSpeed: 4
+  PronedSpeed: 1.8
   BalanceSpeed: 2
   SlideSpeed: 30
   HangSpeed: 15

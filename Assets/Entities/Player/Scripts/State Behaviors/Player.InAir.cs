@@ -4,6 +4,11 @@ using UnityEngine;
 
 public partial class PlayerMove
 {
+    public bool OnGround { get { return CheckGround && GroundHit; } }
+
+    public bool Landing { get { return animator.GetBool(AnimationHashUtility.PlayingLandAnimation); } }
+
+    public bool HardLanding { get { return animator.GetBool(AnimationHashUtility.HardLanding); } }
     public bool FarFromGround
     {
         get
@@ -92,5 +97,62 @@ public partial class PlayerMove
         }
 
         LastHangObject = null;
+    }
+
+    public void CheckLanded()
+    {
+        if (OnGround)
+        {
+            if (PlayingFallingAnimation && !Climbing && !Hanging)
+            {
+                if (DebugSettings.DebugLand)
+                {
+                    Debug.Log("Land call from Check land.");
+                }
+
+                Land(true);
+            }
+            else if (!PlayingFallingAnimation && !Climbing && !Hanging && Falling)
+            {
+                Land(false);
+            }
+
+            LastGroundedPositionY = thisTransform.position.y;
+        }
+        else
+        {
+            animator.SetFloat(AnimationHashUtility.FallHeight, LastGroundedPositionY - thisTransform.position.y);
+        }
+    }
+    private void CheckFalling()
+    {
+        if (!Crouched && !Jumping && !Falling && FarFromGround && !OnGround && !Sliding && !Vaulting)
+        {
+            if (FallSettings.MinFallTime == 0)
+            {
+                StartFalling();
+                return;
+            }
+
+            if (DebugSettings.DebugFalling && TimeWaitingToFall == 0)
+            {
+                Debug.Log("Waiting Time to Start Falling");
+            }
+
+            TimeWaitingToFall += Time.deltaTime;
+
+            if (TimeWaitingToFall >= FallSettings.MinFallTime)
+            {
+                StartFalling();
+            }
+
+            return;
+        }
+        else if (Crouched && FarFromGround && !OnGround)
+        {
+            StartFalling();
+        }
+
+        TimeWaitingToFall = 0;
     }
 }

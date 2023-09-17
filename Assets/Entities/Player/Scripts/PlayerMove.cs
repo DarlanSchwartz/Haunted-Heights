@@ -9,9 +9,9 @@ public partial class PlayerMove : MonoBehaviour
     private Vector3 restartPos;
     public bool isLocked = false;
     private Transform thisTransform;
-    public Transform PlayerHead { get; private set; } // Is found on awake
+    public Transform PlayerHead { get; private set; }
+    public Transform PlayerCamera { get; private set; }
 
-    public Transform PlayerCamera { get; private set; } // Is set on awake
     // Canera FOV run Effect
     private Camera CameraComponent { get; set; }
     private float fovCounter = 0;
@@ -19,27 +19,26 @@ public partial class PlayerMove : MonoBehaviour
     public int runningCameraFov = 80;
     public float fovFadeSpeed = 5;
 
-    public Transform SlideDirection { get; private set; } // Is created on awake
-    public Animator animator { get; private set; } // Is found on awake
-
-    public PlayerLook MouseLook; // Need to be set on inspector
-
+    public Transform SlideDirection { get; private set; }
+    public Animator animator { get; private set; }
+    public PlayerLook MouseLook;
     public bool MovingBackwards { get { return VerticalInput <= -0.1f; } }
-
-    public HandIK HandIK { get; private set; } // Is found on awake
-    public FeetIK FeetIK { get; private set; } // Is found on awake
-    public CharacterController Controller { get; private set; } // Is found on awake
+    public HandIK HandIK { get; private set; }
+    public FeetIK FeetIK { get; private set; }
+    public CharacterController Controller { get; private set; }
     [Space(10)]
-    [Header("Keys")] //--------------------------------------------------KEYS----------------------------------------------------------------------
+    [Header("Keys")]
     public KeyCode runKey = KeyCode.LeftShift;
     public KeyCode jumpKey = KeyCode.Space;
     public KeyCode crouchKey = KeyCode.LeftControl;
     public KeyCode slideKey = KeyCode.C;
+    public KeyCode proneKey = KeyCode.Z;
     [Space(10)]
     public SpeedSettings Speed;
     public FallSettings FallSettings;
     public VaultSettings VaultSettings;
     public CrouchSettings CrouchSettings;
+    public ProneSettings ProneSettings;
     public SlopeSettings SlopeSettings;
     public DebugSettings DebugSettings;
     public ClimbSettings ClimbSettings;
@@ -114,7 +113,7 @@ public partial class PlayerMove : MonoBehaviour
     }
     private void Update()
     {
-        if (isLocked)
+        if (isLocked || m_inspecting)
         {
             return;
         }
@@ -124,38 +123,57 @@ public partial class PlayerMove : MonoBehaviour
             return;
         }
 
-        if (m_inspecting)
-        {
-            return;
-        }
-
         if (Input.GetKeyUp(resetDebugPositionKey) && resetPosition != null)
         {
             ResetPlayer(resetPosition.position, resetPosition.rotation);
             return;
         }
 
-        if (InBalanceMode)
+        if (InBalanceState)
         {
-            HandleBalance();
+            HandleBalanceMovement();
             return;
         }
 
-        if (InLadder)
+        if (InLadderState)
         {
             HandleLadderMovement();
             return;
         }
 
-
         if (!Vaulting && !Hanging && !SlidingUnder && !JumpingOnto && !GoingToHangTarget)
         {
             MoveSimple();
-            HandleVaultRefactored();
-            HandleJumpingOnto();
+
+            if (Input.GetKeyDown(jumpKey) && CanVault)
+            {
+                VaultMethod();
+            }
+
+            if (CanJumpOnto && Input.GetKeyDown(jumpKey))
+            {
+                StartJumpOnto();
+            }
+
             HandleCrouch();
-            HandleClimb();
-            HandleSlideUnder();
+
+            if (Input.GetKeyDown(proneKey) && CanProne)
+            {
+                Prone();
+                return;
+            }
+
+            if (CanClimb)
+            {
+                StartHang();
+                return;
+            }
+
+            if (Input.GetKeyDown(slideKey) && CanSlide)
+            {
+                StartSlide();
+                return;
+            }
 
             CheckFalling();
 
@@ -164,7 +182,11 @@ public partial class PlayerMove : MonoBehaviour
                 CheckLanded();
             }
 
-            HandleJump();
+            if (Input.GetKeyDown(jumpKey) && CanJump)
+            {
+                Jump();
+                return;
+            }
 
             HandleAnimations();
         }
@@ -205,31 +227,7 @@ public partial class PlayerMove : MonoBehaviour
             MouseLook.LookRotation(true);
         }
     }
-    private void HandleBalance()
-    {
 
-        if (m_goinToBalanceStartPos)
-        {
-            return;
-        }
-
-        thisTransform.position = Vector3.MoveTowards(thisTransform.position, currentBalanceBeanTarget, (VerticalInput * GetTargetSpeed) * Time.deltaTime);
-        animator.SetFloat(AnimationHashUtility.Vertical, VerticalInput);
-        MouseLook.LookRotation(false);
-
-        if (VerticalInput > 0)
-        {
-            motionTime += 0.5f * Time.deltaTime;
-        }
-        else if (VerticalInput < 0)
-        {
-            motionTime += 0.25f * Time.deltaTime;
-        }
-
-        PlayerCamera.position = Vector3.Lerp(PlayerCamera.position, PlayerHead.position, Speed.CrouchCameraSpeed * Time.deltaTime);
-
-        animator.SetFloat(AnimationHashUtility.MotionTimeDelta, motionTime);
-    }
     private void MoveSimple()
     {
         if (Climbing || HardLanding)
@@ -249,90 +247,7 @@ public partial class PlayerMove : MonoBehaviour
             Controller.Move(m_gravityForceV * Time.deltaTime);
         }
     }
-    public void HandleJump()
-    {
-        if (Input.GetKeyDown(jumpKey) && CanJump)
-        {
-            Jump();
-        }
-    }
-    private void HandleClimb()
-    {
-        if (CanClimb)
-        {
-            StartHang();
-        }
-    }
-    private void HandleVaultRefactored()
-    {
-        if (Input.GetKeyDown(jumpKey) && CanVault)
-        {
-            VaultMethod();
-        }
-    }
-    public void HandleJumpingOnto()
-    {
-        if (CanJumpOnto && Input.GetKeyDown(jumpKey))
-        {
-            StartJumpOnto();
-        }
-    }
-    public void CheckLanded()
-    {
-        if (OnGround)
-        {
-            if (PlayingFallingAnimation && !Climbing && !Hanging)
-            {
-                if (DebugSettings.DebugLand)
-                {
-                    Debug.Log("Land call from Check land.");
-                }
 
-                Land(true);
-            }
-            else if (!PlayingFallingAnimation && !Climbing && !Hanging && Falling)
-            {
-                Land(false);
-            }
-
-            LastGroundedPositionY = thisTransform.position.y;
-        }
-        else
-        {
-            animator.SetFloat(AnimationHashUtility.FallHeight, LastGroundedPositionY - thisTransform.position.y);
-        }
-    }
-    private void CheckFalling()
-    {
-        if (!Crouched && !Jumping && !Falling && FarFromGround && !OnGround && !Sliding && !Vaulting)
-        {
-            if (FallSettings.MinFallTime == 0)
-            {
-                StartFalling();
-                return;
-            }
-
-            if (DebugSettings.DebugFalling && TimeWaitingToFall == 0)
-            {
-                Debug.Log("Waiting Time to Start Falling");
-            }
-
-            TimeWaitingToFall += Time.deltaTime;
-
-            if (TimeWaitingToFall >= FallSettings.MinFallTime)
-            {
-                StartFalling();
-            }
-
-            return;
-        }
-        else if (Crouched && FarFromGround && !OnGround)
-        {
-            StartFalling();
-        }
-
-        TimeWaitingToFall = 0;
-    }
     private void HandleCrouch()
     {
         if (PlayingFallingAnimation || animator.GetBool(AnimationHashUtility.PlayingLandAnimation))
@@ -345,17 +260,17 @@ public partial class PlayerMove : MonoBehaviour
             case CrouchMode.Toggle:
                 if (Input.GetKeyDown(crouchKey))
                 {
-                    if (DebugSettings.DebugCrouch)
-                    {
-                        Debug.Log("Crouch key pressed");
-                    }
-
                     Crouched = !Crouched;
                 }
                 break;
             case CrouchMode.Hold:
                 Crouched = Input.GetKey(crouchKey);
                 break;
+        }
+
+        if(InProneState && Crouched)
+        {
+            CancelProne();
         }
 
         if (CrouchSettings.UseStamina && m_currentCrouchStamina < CrouchSettings.MaxStamina)
@@ -427,15 +342,9 @@ public partial class PlayerMove : MonoBehaviour
 
         animator.SetBool(AnimationHashUtility.OnGround, OnGround);
 
+        bool isMoving = AnimatorVertical > 0.1f || AnimatorVertical < -0.1f || AnimatorHorizontal > 0.1f || AnimatorHorizontal < -0.1f;
+        animator.SetBool(AnimationHashUtility.Idle, !isMoving);
 
-        if (AnimatorVertical > 0.1f || AnimatorVertical < -0.1f || AnimatorHorizontal > 0.1f || AnimatorHorizontal < -0.1f)
-        {
-            animator.SetBool(AnimationHashUtility.Idle, false);
-        }
-        else
-        {
-            animator.SetBool(AnimationHashUtility.Idle, true);
-        }
 
         if (animator.GetFloat(AnimationHashUtility.Vertical) >= 1.9f)
         {
@@ -456,61 +365,7 @@ public partial class PlayerMove : MonoBehaviour
             }
         }
     }
-    private void HandleSlideUnder()
-    {
-        if (Input.GetKeyDown(slideKey) && CanSlide)
-        {
-            StartSlide();
-        }
-    }
-
-
-
     // Properties
-
-    #region Jumping
-
-    public bool Jumping { get; private set; } = false;
-
-    public bool CheckGround { get; private set; } = true;
-
-    public bool CanJump
-    {
-        get
-        {
-            if (CanHang || CanVault || CanJumpOnto || Hanging || Climbing || HasSomethingAboveHead || PlayingFallingAnimation || Jumping || Vaulting || Falling || Sliding || Landing)
-            {
-                if (DebugSettings.DebugCanJump)
-                {
-                    string reason = "";
-
-                    reason += Jumping ? " Jumping" : "";
-                    reason += Vaulting ? " Vaulting" : "";
-                    reason += Vaulting ? " Falling" : "";
-                    reason += Sliding ? " Sliding" : "";
-                    reason += PlayingFallingAnimation ? " playing Falling Animation" : "";
-                    reason += HasSomethingAboveHead ? " has something above head" : "";
-                    reason += Landing ? " is playing Landing Anim" : "";
-
-                    Debug.Log("Cannot jump because is" + reason);
-
-                    if (!GroundHit && !Controller.isGrounded && FarFromGround)
-                    {
-                        Debug.Log("Cannot jump because is not grounded");
-                        Debug.Log("Ground hits = " + GroundHit);
-                        Debug.Log("Far from ground = " + FarFromGround);
-                    }
-
-                }
-
-                return false;
-            }
-
-            return true;
-        }
-    }
-
-    #endregion
 
     #region On Slopes
 
@@ -595,13 +450,15 @@ public partial class PlayerMove : MonoBehaviour
                 return SlideSettings.HeadHitAboveRayLenght;
             }
 
+            if (InProneState)
+            {
+                return ProneSettings.HeadHitAboveRayLenght;
+            }
+
             return DefaultSettings.HeadHitAboveRayLenght;
 
         }
     }
-
-    public bool GroundHit { get { return Physics.CheckSphere(CheckSpherePosition, Controller.radius, FallSettings.GroundLayers, QueryTriggerInteraction.Ignore); } }
-
 
     public bool HasSomethingAboveHead
     {
@@ -620,32 +477,6 @@ public partial class PlayerMove : MonoBehaviour
             return true;
         }
     }
-
-    public bool OnGround { get { return CheckGround && GroundHit; } }
-
-    public bool Landing { get { return animator.GetBool(AnimationHashUtility.PlayingLandAnimation); } }
-
-    public bool HardLanding { get { return animator.GetBool(AnimationHashUtility.HardLanding); } }
-
-    public Vector3 CheckSpherePosition
-    {
-        get
-        {
-            if (!Vaulting)
-            {
-                m_checkSpherePosition = ColliderBotton;
-
-                m_checkSpherePosition.y += 0.2f;
-            }
-            else
-            {
-                m_checkSpherePosition = thisTransform.position;
-            }
-
-            return m_checkSpherePosition;
-        }
-    }
-
     public float HorizontalInput { get { return Input.GetAxis("Horizontal"); } }
     public float VerticalInput { get { return Input.GetAxis("Vertical"); } }
 
@@ -685,7 +516,7 @@ public partial class PlayerMove : MonoBehaviour
     {
         get
         {
-            if (InBalanceMode)
+            if (InBalanceState)
             {
                 m_TargetSpeed = Mathf.Lerp(m_TargetSpeed, Speed.BalanceSpeed, Time.deltaTime * Speed.Acceleration);
                 return m_TargetSpeed;
@@ -700,6 +531,12 @@ public partial class PlayerMove : MonoBehaviour
             if (SlidingUnder)
             {
                 m_TargetSpeed = Speed.SlideUnderSpeed;
+                return m_TargetSpeed;
+            }
+
+            if (InProneState)
+            {
+                m_TargetSpeed = Speed.PronedSpeed;
                 return m_TargetSpeed;
             }
 
