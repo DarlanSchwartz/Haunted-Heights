@@ -46,7 +46,7 @@ public class MainMenuController : MonoBehaviour
         while (!operation.isDone)
         {
             float progress = Mathf.Clamp01(operation.progress / 0.9f);
-            LoadingText.text = "Loading " + (progress * 100);
+            LoadingText.text = "Loading " + ((int)progress * 100);
             yield return null;
         }
         yield break;

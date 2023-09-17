@@ -7,35 +7,33 @@ TagManager:
   - Vaultable
   - Grabable
   - JumpOnto
-  - WetSurface
-  - WaterDeep
-  - Inside_Wood
-  - Grass
-  - InsideBuilding
-  - Item
   - Ladder
   - BalanceBeam
-  - Outside_Wood
-  - Metal
-  - Dirt
   - BalanceBeamBetween
   - Wall
+  - Metal
   - Tile
-  - WaterShallow
-  - Metal_Old
+  - WetSurface
   - Concrete
+  - Metal_Old
+  - WaterDeep
+  - WaterShallow
+  - Outside_Wood
+  - Dirt
+  - Rock
+  - Grass
+  - Inside_Wood
+  - Item
+  - InsideBuilding
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Player
   - Water
   - UI
-  - 
-  - 
-  - Player
-  - Vaultables
   - DontCollideWithPlayer
+  - Vaultables
   - DontRender
   - PostProcessing
   - RainEffect
@@ -57,10 +55,13 @@ TagManager:
   - 
   - 
   - 
+  - 
+  - 
+  - 
   m_SortingLayers:
   - name: Default
     uniqueID: 0
     locked: 0
   - name: Camera_RainEffect
-    uniqueID: 939832737
+    uniqueID: 1198255611
     locked: 0
