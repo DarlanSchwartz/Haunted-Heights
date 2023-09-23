@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 924e53f8fce3bfe4793b82fc5c8a8d07
 ModelImporter:
-  serializedVersion: 21300
+  serializedVersion: 22200
   internalIDToNameTable:
   - first:
       74: -203655887218126122
@@ -29,8 +29,13 @@ ModelImporter:
     rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
-    animationRetargetingWarnings: 
-    animationDoRetargetingWarnings: 0
+    animationRetargetingWarnings: "\nRetargeting quality report for clip 'mixamo.com':\n\tLeftLowerLeg
+      average position error 0.2 mm and maximum position error 4.8 mm at time 1:10
+      (41.2%) Frame 40\n\tLeftLowerArm average position error 0.7 mm and maximum
+      position error 6.4 mm at time 1:17 (48.5%) Frame 47\n\tRightFoot average orientation
+      error 0.4 deg and maximum orientation error 4.8 deg at time 2: 5 (67.0%) Frame
+      65\n"
+    animationDoRetargetingWarnings: 1
     importAnimatedCustomProperties: 0
     importConstraints: 0
     animationCompression: 3
@@ -46,7 +51,7 @@ ModelImporter:
       takeName: mixamo.com
       internalID: 0
       firstFrame: 31
-      lastFrame: 38
+      lastFrame: 40
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -58,9 +63,9 @@ ModelImporter:
       loopBlendOrientation: 1
       loopBlendPositionY: 1
       loopBlendPositionXZ: 1
-      keepOriginalOrientation: 0
+      keepOriginalOrientation: 1
       keepOriginalPositionY: 1
-      keepOriginalPositionXZ: 0
+      keepOriginalPositionXZ: 1
       heightFromFeet: 0
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
@@ -87,9 +92,9 @@ ModelImporter:
       loopBlendOrientation: 1
       loopBlendPositionY: 1
       loopBlendPositionXZ: 1
-      keepOriginalOrientation: 0
+      keepOriginalOrientation: 1
       keepOriginalPositionY: 1
-      keepOriginalPositionXZ: 0
+      keepOriginalPositionXZ: 1
       heightFromFeet: 0
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
@@ -143,6 +148,7 @@ ModelImporter:
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
+    importPhysicalCameras: 1
     importVisibility: 1
     importBlendShapes: 1
     importCameras: 1
@@ -170,6 +176,7 @@ ModelImporter:
     secondaryUVMinObjectScale: 1
     secondaryUVPackMargin: 4
     useFileScale: 1
+    strictVertexDataChecks: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
@@ -613,8 +620,7 @@ ModelImporter:
     - name: mixamorig6:Hips
       parentName: JumpingLanding(Clone)
       position: {x: 0, y: 0.99610484, z: -0.06694465}
-      rotation: {x: -0.0000000029103826, y: -7.2759576e-10, z: -0.000000001546141,
-        w: 1}
+      rotation: {x: -0.0000000029103826, y: -7.2759576e-10, z: -0.000000001546141, w: 1}
       scale: {x: 0.99999994, y: 0.99999994, z: 1}
     - name: mixamorig6:LeftUpLeg
       parentName: mixamorig6:Hips
@@ -679,8 +685,7 @@ ModelImporter:
     - name: mixamorig6:Spine2
       parentName: mixamorig6:Spine1
       position: {x: -0, y: 0.13711947, z: -6.1614736e-10}
-      rotation: {x: 0.0000000037252903, y: -0.000000002304402, z: -0.000000006434974,
-        w: 1}
+      rotation: {x: 0.0000000037252903, y: -0.000000002304402, z: -0.000000006434974, w: 1}
       scale: {x: 1.0000001, y: 1, z: 1}
     - name: mixamorig6:Neck
       parentName: mixamorig6:Spine2
@@ -955,6 +960,7 @@ ModelImporter:
   humanoidOversampling: 1
   avatarSetup: 1
   addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 0
   remapMaterialsIfMaterialImportModeIsNone: 0
   additionalBone: 0
   userData: 

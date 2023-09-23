@@ -19,10 +19,10 @@ public partial class PlayerMove
         m_targetPosJumpOnto = GetJumpOntoEndPosition();
         m_targetPosJumpOnto.y += 0.2f;
         animator.SetTrigger(AnimationHashUtility.JumpOnto);
-        StartCoroutine(JumpOntoLerpDelta(animator.GetBehaviour<JumpingOntoBehavior>()));
+        StartCoroutine(JumpOntoLerpDelta(animator.GetBehaviour<BehaviourJumpingOnto>()));
     }
 
-    private IEnumerator JumpOntoLerpDelta(JumpingOntoBehavior jumpingOntoAnim)
+    private IEnumerator JumpOntoLerpDelta(BehaviourJumpingOnto jumpingOntoAnim)
     {
         Vector3 startPos = thisTransform.position;
 

@@ -9,4 +9,7 @@ public class BalanceBeam : MonoBehaviour
 
     public Vector3 MoveAxis = Vector3.forward;
 
+    public BalanceBeamInvisibleWallTriggerChecker pointA;
+    public BalanceBeamInvisibleWallTriggerChecker pointB;
+
 }

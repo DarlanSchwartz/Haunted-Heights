@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Vault Settings", menuName = "Player/Vault Settings", order = 0)]
+[CreateAssetMenu(fileName = "New Vault Settings", menuName = "Player/Vault Settings", order = 2)]
 public class VaultSettings : ScriptableObject
 {
     [Space(10)]

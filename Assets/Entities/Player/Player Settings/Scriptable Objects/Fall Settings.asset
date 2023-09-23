@@ -20,5 +20,5 @@ MonoBehaviour:
   GravityForce: 40
   ControllerHeight: 3.19
   ControllerCenter: {x: 0, y: 2, z: 0}
-  AirControlFactor: 0.8
+  AirControlFactor: 1
   AirResistance: 230

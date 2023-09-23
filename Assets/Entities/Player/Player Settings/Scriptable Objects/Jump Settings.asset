@@ -54,6 +54,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  Force: 5
+  Force: 3.83
   HeadHitAboveRayLenght: 0.2
   ControllerStepOffset: 0

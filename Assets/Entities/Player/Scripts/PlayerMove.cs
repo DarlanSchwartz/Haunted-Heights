@@ -205,7 +205,6 @@ public partial class PlayerMove : MonoBehaviour
     {
         MouseLook.Reset();
         thisTransform.SetPositionAndRotation(position, rotation);
-
     }
     private void HandleMouseLook()
     {

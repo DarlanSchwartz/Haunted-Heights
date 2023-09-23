@@ -20,6 +20,14 @@ public static class AnimationHashUtility
     public readonly static int EndSlide = Animator.StringToHash("EndSlide");
     public readonly static int HardLanding = Animator.StringToHash("HardLanding");
     public readonly static int RollLanding = Animator.StringToHash("RollLanding");
+    public readonly static int Landing = Animator.StringToHash("Landing");
+    public readonly static int Sliding = Animator.StringToHash("Sliding");
+    public readonly static int Stand = Animator.StringToHash("Stand");
+    public readonly static int Falling = Animator.StringToHash("Falling");
+    public readonly static int Climb_Up = Animator.StringToHash("Climb_Up");
+    //Climb_Up
+
+
 
     public readonly static int MotionTimeDelta = Animator.StringToHash("MotionTimeDelta");
     public readonly static int Balance = Animator.StringToHash("InBalanceMode");

@@ -49,6 +49,7 @@ public partial class PlayerMove
         m_currentTriggerStartTransform = startTrigger;
         currentBalanceBeanTarget = target;
         InBalanceState = true;
+        FeetIK.IsEnabled = false;
         animator.SetBool(AnimationHashUtility.Balance, InBalanceState);
         MouseLook.ClampHorizontalRotation = true;
         MouseLook.MaxY = 70;
@@ -62,12 +63,17 @@ public partial class PlayerMove
     }
     private IEnumerator GoToBalanceStart(Transform startPos)
     {
+        if (m_goinToBalanceStartPos)
+        {
+            yield break;
+        }
+        m_goinToBalanceStartPos = true;
+
         do
         {
             thisTransform.SetPositionAndRotation(Vector3.Slerp(thisTransform.position, startPos.position, 50 * Time.deltaTime), Quaternion.Slerp(thisTransform.rotation, startPos.rotation, 10 * Time.deltaTime));
-            m_goinToBalanceStartPos = true;
             yield return null;
-        } while (Vector3.Distance(thisTransform.position, startPos.position) > 0.01f && thisTransform.rotation != startPos.rotation);
+        } while (Vector3.Distance(thisTransform.position, startPos.position) > float.Epsilon && thisTransform.rotation != startPos.rotation);
 
         m_goinToBalanceStartPos = false;
 
@@ -75,6 +81,7 @@ public partial class PlayerMove
     }
     public void ExitBalanceMode()
     {
+        FeetIK.IsEnabled = true;
         InBalanceState = false;
         animator.SetFloat(AnimationHashUtility.MotionTimeDelta, 1);
         animator.SetBool(AnimationHashUtility.Balance, InBalanceState);
@@ -87,7 +94,6 @@ public partial class PlayerMove
 
     private void HandleBalanceMovement()
     {
-
         if (m_goinToBalanceStartPos)
         {
             return;

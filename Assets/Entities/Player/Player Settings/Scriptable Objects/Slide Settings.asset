@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Slide Settings
   m_EditorClassIdentifier: 
   ControllerHeight: 0.7
-  ControllerCenter: {x: 0, y: 0.35, z: 0}
+  ControllerCenter: {x: 0, y: 1, z: 0}
   AnimationLenght: 1
   HeadHitAboveRayLenght: 4
   ControllerRadius: 1

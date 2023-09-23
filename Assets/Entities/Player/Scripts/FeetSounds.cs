@@ -74,7 +74,7 @@ public class FeetSounds : MonoBehaviour
             {
                 if (feetSound.TagMaterial == tag)
                 {
-                    PlayFootstepSound(RandomAudioClip(feetSound.Jumping), PlayerIsRunning ? feetSound.RunningVolume : feetSound.WalkingVolume);
+                    PlayFootstepSound(RandomAudioClip(feetSound.Jumping), PlayerIsRunning ? feetSound.RunningVolume : feetSound.WalkingVolume , rightFootTransform.position);
                     if (feetSound.ParticlePrefab != null)
                     {
                         InstantiateParticle(leftFootTransform.position,feetSound.ParticlePrefab, Quaternion.identity);
@@ -94,7 +94,7 @@ public class FeetSounds : MonoBehaviour
             {
                 if (feetSound.TagMaterial == tag)
                 {
-                    PlayFootstepSound(RandomAudioClip(PlayerIsRunning ? feetSound.Running : feetSound.Walking), PlayerIsRunning ? feetSound.RunningVolume : feetSound.WalkingVolume);
+                    PlayFootstepSound(RandomAudioClip(PlayerIsRunning ? feetSound.Running : feetSound.Walking), PlayerIsRunning ? feetSound.RunningVolume : feetSound.WalkingVolume, leftFootTransform.position);
                     if (feetSound.ParticlePrefab != null)
                     {
                         InstantiateParticle(leftFootTransform.position,feetSound.ParticlePrefab, Quaternion.identity);
@@ -107,8 +107,6 @@ public class FeetSounds : MonoBehaviour
     }
     public void Step(int left)
     {
-       
-
         if (!PlayerIsJumping  && (Time.time - timeSinceLastStepCall) > minimumTimeBetweenSteps)
         {
             if (PlayerIsIdle && !PlayerIsVaulting)
@@ -143,7 +141,7 @@ public class FeetSounds : MonoBehaviour
 
         timeSinceLastStepCall = Time.time;
     }
-    private void PlayFootstepSound(AudioClip sound, float volume)
+    private void PlayFootstepSound(AudioClip sound, float volume, Vector3 position)
     {
         if (RandomPich) // Modulate audio
         {
@@ -151,7 +149,7 @@ public class FeetSounds : MonoBehaviour
         }
 
         AudioSource.volume = volume;
-        AudioSource.PlayOneShot(sound);
+        AudioSource.PlayClipAtPoint(sound, position);
     }
 
     private void Footstep(string tag,bool left)
@@ -160,7 +158,7 @@ public class FeetSounds : MonoBehaviour
         {
             if(feetSound.TagMaterial == tag)
             {
-                PlayFootstepSound(RandomAudioClip(PlayerIsRunning ? feetSound.Running : feetSound.Walking), PlayerIsRunning ? feetSound.RunningVolume : feetSound.WalkingVolume);
+                PlayFootstepSound(RandomAudioClip(PlayerIsRunning ? feetSound.Running : feetSound.Walking), PlayerIsRunning ? feetSound.RunningVolume : feetSound.WalkingVolume,left ? leftFootTransform.position : rightFootTransform.position);
                 if(feetSound.ParticlePrefab != null)
                 {
                     InstantiateParticle(left ? leftFootTransform.position : rightFootTransform.position, feetSound.ParticlePrefab, Quaternion.identity);
